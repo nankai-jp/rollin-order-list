@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROLLIN THREEご注文リスト</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 印刷用注文書ヘッダー（画面上は非表示、印刷時のみ表示） -->
+    <div class="print-only print-order-header">
+        <div class="print-title-area">
+            <h1>御 注 文 書</h1>
+            <span class="print-date-label">注文日: <span id="print-order-date">----年--月--日</span></span>
+        </div>
+        <div class="print-info-area">
+            <div class="print-vendor">
+                <p class="vendor-name"><strong>ROLLIN THREE 御中</strong></p>
+            </div>
+            <div class="print-client">
+                <div class="client-field">貴社名：<span id="print-client-company" class="print-value">____________________</span></div>
+                <div class="client-field">ご担当者名：<span id="print-client-name" class="print-value">__________________</span></div>
+                <div class="client-field">お電話番号：<span id="print-client-phone" class="print-value">__________________</span></div>
+            </div>
+        </div>
+    </div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <h1 class="app-title">
+                <span class="logo-icon">📦</span>
+                ROLLIN THREEご注文リスト
+            </h1>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <span class="stat-label">総商品数</span>
+                    <span class="stat-value" id="stat-total">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">画像登録あり</span>
+                    <span class="stat-value" id="stat-has-images">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <section class="controls-section">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="品番や商品名で検索...">
+            </div>
+            <div class="filter-box">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="filter-images-only">
+                    <span class="checkmark"></span>
+                    画像ありのみ表示
+                </label>
+            </div>
+            <div class="actions-box" style="margin-left: auto; display: flex; gap: 0.75rem;">
+                <button class="btn btn-accent" id="confirm-btn">
+                    👁️ 注文内容を確認
+                </button>
+                <button class="btn btn-primary" id="history-lookup-btn">
+                    🕒 過去の発注履歴を確認
+                </button>
+                <button class="btn btn-secondary" id="reset-view-btn" style="display: none;">
+                    ⬅ 注文画面に戻る
+                </button>
+                <button class="btn btn-primary" id="submit-order-btn" style="background-color: var(--success); color: white; display: none;">
+                    🚀 ご発注を確定する
+                </button>
+                <button class="btn btn-primary" id="print-pdf-btn" style="display: none;">
+                    📄 注文書出力 (PDF/印刷)
+                </button>
+            </div>
+        </section>
+
+        <section class="instructions-section">
+            <div class="instructions-card">
+                <h3 class="instructions-title">📖 ご発注操作ガイド</h3>
+                <ul class="instructions-list">
+                    <li><strong>ご発注数量の入力</strong>：サイズ別の数量プルダウンを変更すると、右端の「金額計」および画面上部の合計値が即座に自動計算されます。<br><span style="color: var(--danger); font-weight: bold;">※ご発注の確定後は、誤発注防止のため一度「🧹 入力内容をクリア」ボタンを押して画面をクリアしないと、新しい数量を入力することはできません。</span></li>
+                    <li><strong>ご発注内容の確認と確定</strong>：入力後、<strong>「👁️ 注文内容を確認」</strong>ボタンを押すと、数量が入力されたご発注対象の商品のみに絞り込まれます。内容に問題がなければ、表示される<strong>「🚀 ご発注を確定する」</strong>ボタンを押して発注を確定（送信）します。<strong>「⬅ 注文画面に戻る」</strong>ボタンで元の入力画面に戻ることができます。<br><span style="color: var(--danger); font-weight: bold;">※ご発注の確定後は、誤発注防止のため一度「🧹 入力内容をクリア」ボタンを押して画面をクリアしないと、数量の変更や入力はできません。</span></li>
+                    <li><strong>過去の発注履歴の確認・再利用</strong>：<strong>「🕒 過去の発注履歴を確認」</strong>ボタンを押し、貴社名・ご担当者名・お電話番号を入力して検索すると、過去の履歴が確認できます。詳細画面から<strong>「🔄 この発注内容を再読込」</strong>を押すと、過去の数量と発注者情報をそのまま読み込んで再利用できます。</li>
+                    <li><strong>商品の画像確認</strong>：リストの左端に表示される画像サムネイルをクリックすると、ポップアップ画面でデザイン画像を拡大確認いただけます。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 注文元情報（印刷用）の入力フォーム -->
+        <section class="client-info-section">
+            <div class="client-info-form">
+                <h3 class="client-info-title">📋 ご発注者様情報（注文書に記載されます）</h3>
+                <div class="client-info-grid">
+                    <div class="form-group">
+                        <label for="input-client-company">貴社名</label>
+                        <input type="text" id="input-client-company" placeholder="例：◯◯株式会社">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-client-name">ご担当者名</label>
+                        <input type="text" id="input-client-name" placeholder="例：山田 太郎">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-client-phone">お電話番号</label>
+                        <input type="text" id="input-client-phone" placeholder="例：03-1234-5678">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="table-section">
+            <div class="table-header-tools" style="display: flex; justify-content: flex-end; padding: 0.75rem 1rem; background-color: #f8fafc; border-bottom: 1px solid var(--border-color); border-radius: 16px 16px 0 0;">
+                <button class="btn btn-secondary btn-sm" id="clear-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-color: var(--danger); color: var(--danger); background: transparent; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+                    🧹 入力内容をクリア
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="order-table" id="order-table">
+                    <thead>
+                        <tr id="table-header-row">
+                            <!-- JSで動的にヘッダーが挿入されます -->
+                        </tr>
+                        <tr id="table-totals-row" class="totals-row">
+                            <!-- JSで動的に合計行が挿入されます -->
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- JSで動的に行が挿入されます -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+
+
+    <!-- 画像ギャラリー用モーダル -->
+    <div class="modal gallery-modal" id="gallery-modal">
+        <div class="modal-content gallery-content">
+            <button class="close-btn" id="close-gallery-modal">&times;</button>
+            <div class="gallery-container">
+                <button class="gallery-nav prev" id="gallery-prev-btn">&lt;</button>
+                <div class="gallery-viewport">
+                    <img src="" alt="商品画像" class="gallery-img" id="gallery-img">
+                </div>
+                <button class="gallery-nav next" id="gallery-next-btn">&gt;</button>
+            </div>
+            <div class="gallery-info">
+                <span class="gallery-counter" id="gallery-counter">1 / 1</span>
+                <span class="gallery-filename" id="gallery-filename">image.png</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 発注完了用モーダル -->
+    <div class="modal order-complete-modal" id="order-complete-modal">
+        <div class="modal-content" style="max-width: 450px; text-align: center; padding: 2.5rem 2rem; background-color: #ffffff; color: var(--text-primary);">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">🎉</div>
+            <h2 style="margin-bottom: 0.75rem; color: var(--success);">ご発注ありがとうございます</h2>
+            <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                ご発注内容がシステムに登録されました。<br>
+                発注控えとして注文書を印刷・PDF保存できます。
+            </p>
+            <div style="background-color: #f1f5f9; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-family: monospace; font-size: 1.1rem; border: 1px solid var(--border-color); font-weight: bold;">
+                発注番号: <span id="complete-order-number" style="color: var(--primary);">R3-YYYYMMDD-001</span>
+            </div>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button class="btn btn-secondary" id="close-complete-modal-btn">閉じる</button>
+                <button class="btn btn-primary" id="complete-print-btn">📄 注文書を印刷/保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 過去の注文履歴検索モーダル -->
+    <div class="modal client-history-modal" id="client-history-modal">
+        <div class="modal-content" style="max-width: 800px; padding: 2rem; background-color: #ffffff; color: var(--text-primary); border-radius: 16px; position: relative;">
+            <button class="close-btn" id="close-client-history-modal" style="position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: none; font-size: 1.75rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+            <h2 style="margin-bottom: 1rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+                🕒 過去のご発注履歴の確認・再利用
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
+                ご発注時に入力した「貴社名」「ご担当者名」「お電話番号」を完全一致で入力し、過去の発注データを呼び出します。
+            </p>
+            
+            <div class="client-info-grid" style="margin-bottom: 1.25rem; background-color: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid var(--border-color); display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--text-secondary);">貴社名</label>
+                    <input type="text" id="search-client-company" placeholder="例：◯◯株式会社" style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--text-secondary);">ご担当者名</label>
+                    <input type="text" id="search-client-name" placeholder="例：山田 太郎" style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 0.4rem; color: var(--text-secondary);">お電話番号</label>
+                    <input type="text" id="search-client-phone" placeholder="例：03-1234-5678" style="width: 100%; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <button class="btn btn-secondary" id="client-history-clear-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">情報をクリア</button>
+                <button class="btn btn-primary" id="client-history-search-btn" style="padding: 0.5rem 1.25rem; font-size: 0.85rem; background-color: var(--primary);">🔍 履歴を検索</button>
+            </div>
+            
+            <div id="client-history-results-area" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; background: #fafafa;">
+                <p style="text-align: center; padding: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">検索する発注者情報を入力し、「履歴を検索」ボタンを押してください。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 過去の注文詳細モーダル (顧客用) -->
+    <div class="modal client-detail-modal" id="client-detail-modal">
+        <div class="modal-content" style="max-width: 800px; padding: 2rem; background-color: #ffffff; color: var(--text-primary); border-radius: 16px; position: relative;">
+            <button class="close-btn" id="close-client-detail-modal" style="position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: none; font-size: 1.75rem; cursor: pointer; color: var(--text-secondary);">&times;</button>
+            <h2 style="margin-bottom: 1rem; color: var(--accent); font-size: 1.25rem;">
+                📄 過去のご発注詳細 (発注番号: <span id="client-detail-order-number">-</span>)
+            </h2>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                ご発注日: <span id="client-detail-order-date">-</span>
+            </div>
+            
+            <div style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 1.25rem;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                    <thead>
+                        <tr style="background: #f1f5f9; border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 0.5rem; width: 40px; text-align: center;">#</th>
+                            <th style="padding: 0.5rem; width: 100px;">品番</th>
+                            <th style="padding: 0.5rem;">商品名</th>
+                            <th style="padding: 0.5rem; width: 70px;">仕様</th>
+                            <th style="padding: 0.5rem; width: 70px;">デザイン</th>
+                            <th style="padding: 0.5rem; width: 80px; text-align: right;">価格</th>
+                            <th style="padding: 0.5rem; text-align: center;">サイズ別数量</th>
+                            <th style="padding: 0.5rem; width: 80px; text-align: right;">小計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="client-detail-tbody">
+                        <!-- 動的に挿入 -->
+                    </tbody>
+                </table>
+            </div>
+            <div style="text-align: right; font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem;">
+                合計金額: <span id="client-detail-grand-total" style="color: var(--accent);">¥0</span>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button class="btn btn-secondary" id="client-detail-back-btn">戻る</button>
+                <button class="btn btn-primary" id="client-detail-reuse-btn" style="background-color: var(--success); color: white;">🔄 この発注内容を再読込</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toast-icon">✓</span>
+        <span class="toast-message" id="toast-message">保存しました</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

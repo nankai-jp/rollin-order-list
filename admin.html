@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【管理画面】ROLLIN THREEご注文履歴</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts Outfit & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 2.5rem;
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+        .admin-login-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+        .admin-login-form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .admin-container {
+            display: none;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .admin-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        .admin-page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+        .history-table th {
+            background-color: #e2e8f0;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .history-table tbody tr:nth-child(even) {
+            background-color: #ffffff;
+        }
+        .history-table tbody tr:nth-child(odd) {
+            background-color: #f0f7ff;
+        }
+        .history-table tbody tr:hover {
+            background-color: #e0effe;
+        }
+        .btn-logout {
+            background-color: #ef4444;
+            color: white !important;
+        }
+        .btn-logout:hover {
+            background-color: #dc2626;
+        }
+        
+        /* 注文詳細モーダルの印刷用調整 */
+        .detail-modal-content {
+            background-color: #ffffff;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 95%;
+            padding: 2.5rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+        
+        /* 注文詳細テーブルのスタイル上書き（全体テーブルのstickyレイアウトを無効化） */
+        .detail-modal-content .order-table {
+            width: 100% !important;
+            table-layout: auto !important;
+        }
+        .detail-modal-content .order-table th, 
+        .detail-modal-content .order-table td {
+            position: static !important;
+            width: auto !important;
+            max-width: none !important;
+            white-space: normal !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        /* 印刷時はモーダル本体のみを表示 */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area-wrapper, #print-area-wrapper * {
+                visibility: visible;
+            }
+            #print-area-wrapper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .modal {
+                position: absolute !important;
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            .detail-modal-content {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .modal-footer {
+                display: none !important;
+            }
+            .close-btn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 簡易認証コンテナ -->
+    <div class="admin-login-container" id="login-container">
+        <h2 class="admin-login-title">🔑 管理者ログイン</h2>
+        <div class="admin-login-form">
+            <input type="password" id="admin-password-input" placeholder="パスワードを入力してください">
+            <button class="btn btn-primary" id="login-btn" style="width: 100%;">ログイン</button>
+        </div>
+    </div>
+
+    <!-- 管理者ダッシュボードコンテナ -->
+    <div class="admin-container" id="admin-dashboard">
+        <div class="admin-header-row">
+            <h1 class="admin-page-title">📦 ROLLIN THREE 受注履歴一覧</h1>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn btn-secondary" onclick="location.href='index.html'">⬅ 顧客画面へ</button>
+                <button class="btn btn-secondary btn-logout" id="logout-btn">ログアウト</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                現在登録されているお客様からの発注履歴です。
+            </div>
+            <button class="btn btn-secondary" id="refresh-btn">🔄 履歴を更新</button>
+        </div>
+
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>発注日時</th>
+                    <th>発注番号</th>
+                    <th>貴社名</th>
+                    <th>ご担当者名</th>
+                    <th>お電話番号</th>
+                    <th style="text-align: right;">総発注数量</th>
+                    <th style="text-align: right;">総合計金額</th>
+                    <th style="text-align: center;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="history-tbody">
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        発注履歴を読み込んでいます...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 注文詳細（印刷用）モーダル -->
+    <div class="modal" id="detail-modal">
+        <div class="modal-content detail-modal-content">
+            <button class="close-btn" id="close-detail-modal-btn" style="position: absolute; right: 1.5rem; top: 1rem;">&times;</button>
+            
+            <!-- 印刷ターゲットエリア -->
+            <div id="print-area-wrapper">
+                <div class="print-order-header" style="display: block; margin-bottom: 2rem;">
+                    <div class="print-title-area" style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px double #000; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
+                        <h1 style="font-size: 24pt; font-weight: 700; letter-spacing: 0.5rem; color: #000;">御 注 文 書</h1>
+                        <span style="font-size: 11pt; color: #000;">発注日: <span id="detail-order-date">----年--月--日</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; color: #000;">
+                        <div style="width: 45%;">
+                            <p style="font-size: 14pt; border-bottom: 1px solid #000; padding-bottom: 0.25rem; margin-bottom: 0.5rem; font-weight: bold;">ROLLIN THREE 御中</p>
+                            <p style="font-size: 10pt;">発注番号: <span id="detail-order-number" style="font-weight: bold;">R3-XXXXXXXX-XXX</span></p>
+                        </div>
+                        <div style="width: 50%; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="font-size: 10pt; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem;">貴社名：<span id="detail-client-company" style="font-weight: bold;">____________________</span></div>
+                            <div style="font-size: 10pt; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem;">ご担当者名：<span id="detail-client-name" style="font-weight: bold;">__________________</span></div>
+                            <div style="font-size: 10pt; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem;">お電話番号：<span id="detail-client-phone" style="font-weight: bold;">__________________</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="order-table" style="width: 100% !important; border-collapse: collapse !important; font-size: 9pt !important; color: #000;">
+                    <thead>
+                        <tr style="background-color: #f3f4f6; border: 1px solid #000;">
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 40px;">＃</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 80px;">品番</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 140px;">商品名</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 80px;">ボディ</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 80px;">デザイン</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 60px;">価格</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">S<br>(Std)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">M<br>(Std)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">L<br>(Std)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">XL<br>(Std)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">XXL<br>(Std)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">S<br>(BD)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">M<br>(BD)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">L<br>(BD)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">XL<br>(BD)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">XXL<br>(BD)</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 70px;">金額計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-tbody">
+                        <!-- 動的に明細が挿入されます -->
+                    </tbody>
+                    <tfoot>
+                        <tr style="background-color: #f3f4f6; font-weight: bold;">
+                            <td colspan="6" style="border: 1px solid #000; padding: 6px 4px; text-align: right;">合計</td>
+                            <td id="foot-s-std" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-m-std" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-l-std" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-xl-std" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-xxl-std" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-s-bd" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-m-bd" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-l-bd" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-xl-bd" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-xxl-bd" style="border: 1px solid #000; padding: 6px 4px; text-align: center;">0</td>
+                            <td id="foot-grand-total" style="border: 1px solid #000; padding: 6px 4px; text-align: right; color: var(--accent);">¥ 0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- モーダルフッター操作ボタン -->
+            <div class="modal-footer" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button class="btn btn-secondary" id="close-detail-modal-btn-lower">閉じる</button>
+                <button class="btn btn-primary" id="detail-print-btn">📄 この注文書を印刷/PDF出力</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toast-icon">✓</span>
+        <span class="toast-message" id="toast-message"></span>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

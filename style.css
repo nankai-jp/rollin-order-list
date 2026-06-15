@@ -1,0 +1,1305 @@
+/* ==========================================================================
+   Base Styles & Resets
+   ========================================================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-header: rgba(255, 255, 255, 0.85);
+    --border-color: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --accent: #0284c7;
+    --accent-hover: #0369a1;
+    --accent-disabled: #cbd5e1;
+    
+    --danger: #ef4444;
+    --success: #10b981;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    --shadow-lg: 0 20px 30px -10px rgba(15, 23, 42, 0.12), 0 12px 12px -8px rgba(15, 23, 42, 0.06);
+    
+    --font-main: 'Outfit', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    --transition-speed: 0.25s;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ==========================================================================
+   Header Component
+   ========================================================================== */
+.app-header {
+    background-color: var(--bg-header);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--text-primary) 20%, var(--primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.logo-icon {
+    -webkit-text-fill-color: initial;
+    filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.1));
+}
+
+.header-stats {
+    display: flex;
+    gap: 1.25rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 14px;
+    padding: 0.6rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed), border-color var(--transition-speed);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(2, 132, 199, 0.3);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+/* ==========================================================================
+   Main Container
+   ========================================================================== */
+.app-main {
+    max-width: 1200px;
+    margin: 1.5rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Controls Section (Search & Filters) */
+.controls-section {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    background-color: var(--bg-card);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 18px;
+    padding: 1.25rem 1.75rem;
+    box-shadow: var(--shadow-md);
+}
+
+.search-box {
+    position: relative;
+    flex-grow: 1;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.search-box input {
+    width: 100%;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: var(--font-main);
+    transition: all var(--transition-speed);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.18);
+}
+
+.filter-box {
+    display: flex;
+    align-items: center;
+}
+
+/* Custom Checkbox */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 2rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    user-select: none;
+    color: var(--text-primary);
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: absolute;
+    left: 0;
+    height: 1.25rem;
+    width: 1.25rem;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    transition: all var(--transition-speed);
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    border-color: var(--accent);
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.checkmark::after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked ~ .checkmark::after {
+    display: block;
+}
+
+/* ==========================================================================
+   Table Section
+   ========================================================================== */
+.table-section {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    max-height: 60vh;
+}
+
+.order-table {
+    width: 1560px !important;
+    table-layout: fixed;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.order-table th {
+    background-color: #1e293b; /* Premium slate-800 background */
+    height: 52px;
+    padding: 0 0.6rem;
+    vertical-align: middle;
+    font-weight: 600;
+    color: #ffffff;            /* White text for contrast */
+    border-bottom: 2px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.order-table td {
+    padding: 0.6rem 0.6rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.order-table tbody tr {
+    transition: background-color var(--transition-speed);
+}
+
+.order-table tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.order-table tbody tr:nth-child(odd) {
+    background-color: #f0fdf4; /* Very soft light green */
+}
+
+.order-table tbody tr:hover {
+    background-color: #e0effe !important; /* Slightly darker light blue on hover */
+}
+
+/* 行の種類による背景違い（サブヘッダー/空行など、編集不可の行を落ち着いた見た目に） */
+.order-table tbody tr.row-non-editable {
+    background-color: #e2e8f0 !important;
+    color: var(--text-secondary);
+}
+
+.order-table tbody tr.row-non-editable td {
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+/* ボタン */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 10px;
+    padding: 0.6rem 1.1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-main);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05);
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.25);
+}
+
+.btn-accent {
+    background-color: var(--accent);
+    color: #fff;
+}
+
+.btn-accent:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.25);
+}
+
+/* 「👁️ 注文内容を確認」ボタン用のカスタムスタイル (アンバー/オレンジ) */
+#confirm-btn {
+    background-color: #d97706 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.15) !important;
+}
+#confirm-btn:hover {
+    background-color: #b45309 !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3) !important;
+}
+
+/* 「🕒 過去の発注履歴を確認」ボタン用のカスタムスタイル (バイオレット/パープル) */
+#history-lookup-btn {
+    background-color: #6d28d9 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 6px rgba(109, 40, 217, 0.15) !important;
+}
+#history-lookup-btn:hover {
+    background-color: #5b21b6 !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.3) !important;
+}
+
+.btn-secondary {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+/* 画像確認ボタン (シアン系のゴーストボタン) */
+.btn-image-check {
+    background-color: rgba(14, 165, 233, 0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+}
+
+.btn-image-check:hover:not(:disabled) {
+    background-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+}
+
+.btn-image-check:disabled {
+    background-color: transparent;
+    border-color: var(--accent-disabled);
+    color: var(--text-secondary);
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.action-cell {
+    display: flex;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Modals
+   ========================================================================== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(11, 15, 25, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-speed) ease;
+}
+
+.modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.client-detail-modal {
+    z-index: 1010;
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform var(--transition-speed) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.75rem;
+    cursor: pointer;
+    transition: color var(--transition-speed);
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.modal-body.full-width {
+    grid-template-columns: 1fr;
+}
+
+.modal-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* フォームコントロール */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    transition: border-color var(--transition-speed);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-group input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Image Gallery Modal Specifics
+   ========================================================================== */
+.gallery-modal .modal-content {
+    background-color: #ffffff;
+    max-width: 800px;
+    width: 95%;
+    border-color: var(--border-color);
+}
+
+.gallery-content {
+    position: relative;
+    padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+}
+
+.gallery-content .close-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 1.25rem;
+    z-index: 10;
+}
+
+.gallery-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 55vh;
+    position: relative;
+}
+
+.gallery-viewport {
+    flex-grow: 1;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background-color: #f1f5f9;
+}
+
+.gallery-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.gallery-nav {
+    background-color: rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-speed);
+    z-index: 5;
+}
+
+.gallery-nav:hover {
+    background-color: var(--accent);
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.gallery-nav.prev {
+    margin-right: 1rem;
+}
+
+.gallery-nav.next {
+    margin-left: 1rem;
+}
+
+.gallery-nav:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    background-color: rgba(0, 0, 0, 0.03);
+    color: var(--text-secondary);
+}
+
+.gallery-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding: 0 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.gallery-counter {
+    background-color: rgba(15, 23, 42, 0.05);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.gallery-filename {
+    word-break: break-all;
+    max-width: 80%;
+}
+
+/* ==========================================================================
+   Toast Notification Component
+   ========================================================================== */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: var(--success);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transform: translateY(150%);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+}
+
+.toast.active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-icon {
+    font-weight: 700;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toast.error {
+    background-color: var(--danger);
+}
+
+/* ==========================================================================
+   Scrollbar Customize
+   ========================================================================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Inline Edit Styles (Size Columns & Select boxes)
+   ========================================================================== */
+
+/* サイズ列の等幅化 */
+.col-size {
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    text-align: center;
+    padding: 0.4rem 0.15rem !important;
+}
+
+/* 数量選択用ラッパー */
+.qty-select-wrapper {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 数量のセレクトボックス */
+.qty-select {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 4px;
+    padding: 1px 1px;
+    font-size: 0.85rem;
+    font-family: var(--font-main);
+    width: 40px;
+    height: 24px;
+    text-align: center;
+    text-align-last: center;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition-speed);
+}
+
+.qty-select:disabled {
+    background-color: #e2e8f0;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+/* 特定の列幅と文字溢れ制限 */
+.col-code {
+    max-width: 100px !important;
+    width: 100px !important;
+}
+.col-name {
+    max-width: 160px !important;
+    width: 160px !important;
+}
+.col-pattern {
+    max-width: 110px !important;
+    width: 110px !important;
+}
+.col-design {
+    max-width: 110px !important;
+    width: 110px !important;
+}
+.col-price {
+    max-width: 75px !important;
+    width: 75px !important;
+    text-align: right !important;
+}
+.col-amount {
+    max-width: 85px !important;
+    width: 85px !important;
+    text-align: right !important;
+}
+.col-type {
+    max-width: 80px !important;
+    width: 80px !important;
+}
+.col-id {
+    max-width: 40px !important;
+    width: 40px !important;
+    text-align: center !important;
+}
+
+.col-thumb {
+    width: 60px !important;
+    max-width: 60px !important;
+    min-width: 60px !important;
+    text-align: center !important;
+}
+
+.col-thumb-img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    display: block;
+    margin: 0 auto;
+}
+
+.col-thumb-img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(14, 165, 233, 0.5);
+    border-color: var(--accent);
+}
+
+/* 画面表示での印刷専用要素の非表示 */
+.print-only {
+    display: none !important;
+}
+
+/* ==========================================================================
+   Print Styles (A4 Order Sheet Output)
+   ========================================================================== */
+@media print {
+    /* 全体リセット */
+    body {
+        background-color: #fff !important;
+        color: #000 !important;
+        font-family: 'Noto Sans JP', sans-serif !important;
+        font-size: 11pt !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .app-header,
+    .controls-section,
+    .instructions-section,
+    .btn,
+    .toast,
+    .modal,
+    .col-thumb,
+    .col-retail-price {
+        display: none !important;
+    }
+
+    /* 印刷レイアウトの幅調整 */
+    .app-main {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .table-section {
+        background-color: #fff !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    .table-wrapper {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    /* 印刷用ヘッダーの表示 */
+    .print-only.print-order-header {
+        display: block !important;
+        margin-bottom: 2rem;
+    }
+
+    .print-title-area {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-bottom: 3px double #000;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .print-title-area h1 {
+        font-size: 24pt;
+        font-weight: 700;
+        letter-spacing: 0.5rem;
+        color: #000 !important;
+    }
+
+    .print-date-label {
+        font-size: 11pt;
+    }
+
+    .print-info-area {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+
+    .print-vendor {
+        width: 45%;
+    }
+
+    .vendor-name {
+        font-size: 14pt;
+        border-bottom: 1px solid #000;
+        padding-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .print-client {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .client-field {
+        font-size: 10pt;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 0.25rem;
+    }
+
+    /* テーブルの印刷調整 */
+    .order-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 9pt !important;
+    }
+
+    .order-table th {
+        background-color: #f3f4f6 !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        padding: 6px 4px !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+    }
+
+    .order-table td {
+        background-color: #fff !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        padding: 6px 4px !important;
+        max-width: none !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        overflow: visible !important;
+    }
+
+    .totals-row td {
+        background-color: #f3f4f6 !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        font-weight: 700 !important;
+        padding: 6px 4px !important;
+        position: static !important;
+    }
+
+    /* 変更あり（数量入力済み）の行も印刷時は白黒にする */
+    .order-table tbody tr.row-dirty {
+        background-color: #fff !important;
+    }
+
+    .order-table tbody tr.row-dirty td:first-child {
+        border-left: 1px solid #000 !important;
+    }
+
+    /* セレクトボックスをテキストのように見せる (プルダウンの枠線や矢印を隠す) */
+    .qty-select {
+        background: transparent !important;
+        border: none !important;
+        color: #000 !important;
+        width: 100% !important;
+        font-size: 10pt !important;
+        font-weight: 700 !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        text-align: center !important;
+        padding: 0 !important;
+        height: auto !important;
+    }
+
+    /* 0の値の印刷表記（すっきりさせるために 0 は非表示または薄いハイフンにするなど） */
+    .qty-select option:not(:checked) {
+        display: none !important;
+    }
+
+    /* 印刷時の各列の幅調整 */
+    .col-id {
+        width: 25px !important;
+        max-width: 25px !important;
+        min-width: 25px !important;
+    }
+    .col-type {
+        width: 50px !important;
+        max-width: 50px !important;
+        min-width: 50px !important;
+    }
+    .col-code {
+        width: 70px !important;
+        max-width: 70px !important;
+        min-width: 70px !important;
+    }
+    .col-name {
+        width: 95px !important;
+        max-width: 95px !important;
+        min-width: 95px !important;
+    }
+    .col-pattern {
+        width: 55px !important;
+        max-width: 55px !important;
+        min-width: 55px !important;
+    }
+    .col-design {
+        width: 55px !important;
+        max-width: 55px !important;
+        min-width: 55px !important;
+    }
+    .col-price {
+        width: 55px !important;
+        max-width: 55px !important;
+        min-width: 55px !important;
+    }
+    .col-size {
+        width: 23px !important;
+        max-width: 23px !important;
+        min-width: 23px !important;
+    }
+    .col-amount {
+        width: 70px !important;
+        max-width: 70px !important;
+        min-width: 70px !important;
+    }
+    
+    /* サイズ列のヘッダー調整 */
+    .order-table th.col-size {
+        font-size: 8.5pt !important;
+        line-height: 1.0 !important;
+        padding: 4px 1px !important;
+    }
+}
+
+.qty-select:hover, .qty-select:focus {
+    border-color: var(--accent);
+}
+
+/* ==========================================================================
+   Table Footer (Totals)
+   ========================================================================== */
+.totals-row td {
+    position: sticky;
+    top: 48px;
+    z-index: 19;
+    background-color: #e6f0fa !important;
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 700;
+    color: var(--text-primary);
+    padding: 0.5rem 0.6rem;
+    font-size: 0.9rem;
+}
+
+.totals-row td.col-amount {
+    color: var(--accent) !important;
+    font-size: 0.95rem;
+}
+
+.totals-row td.col-size {
+    color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   Instructions Section
+   ========================================================================== */
+.instructions-section {
+    margin-bottom: 1.5rem;
+}
+
+.instructions-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: none;
+    border-left: 5px solid #d97706; /* Orange accent line */
+    border-radius: 4px 18px 18px 4px;
+    padding: 1.5rem 2rem;
+    box-shadow: var(--shadow-md);
+}
+
+.instructions-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #b45309; /* Darker orange matching accent line */
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.instructions-list {
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.instructions-list li {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    position: relative;
+    padding-left: 1.5rem;
+    line-height: 1.6;
+}
+
+.instructions-list li::before {
+    content: "➔";
+    color: #d97706;
+    position: absolute;
+    left: 0.25rem;
+    font-weight: bold;
+    font-size: 0.85rem;
+    top: 0.05rem;
+}
+
+.instructions-list li strong {
+    color: var(--text-primary);
+}
+
+/* 一括保存ボタン */
+.btn-save-all {
+    background-color: var(--success);
+    color: #fff;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.btn-save-all:hover:not(:disabled) {
+    background-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-save-all:disabled {
+    background-color: var(--accent-disabled);
+    color: var(--text-secondary);
+    opacity: 0.5;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* 保存待ち（未保存変更あり）のパルスアニメーション */
+.btn-save-all.pulse-active {
+    animation: save-pulse 2s infinite;
+}
+
+@keyframes save-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* 変更された行（未保存）のハイライト (濃いめの青系に変更し、見やすくしました) */
+.order-table tbody tr.row-dirty {
+    background-color: rgba(14, 165, 233, 0.14) !important;
+}
+
+.order-table tbody tr.row-dirty:hover {
+    background-color: rgba(14, 165, 233, 0.22) !important;
+}
+
+.order-table tbody tr.row-dirty td:first-child {
+    border-left: 5px solid var(--accent) !important;
+}
+
+/* ==========================================================================
+   Horizontal Sticky Columns (Image to Product Name)
+   ========================================================================== */
+
+/* Left offsets and sticky position on cells */
+.order-table td.col-thumb,
+.order-table th.col-thumb {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+}
+.order-table td.col-id,
+.order-table th.col-id {
+    position: sticky;
+    left: 60px;
+    z-index: 5;
+}
+.order-table td.col-type,
+.order-table th.col-type {
+    position: sticky;
+    left: 100px;
+    z-index: 5;
+}
+.order-table td.col-code,
+.order-table th.col-code {
+    position: sticky;
+    left: 180px;
+    z-index: 5;
+}
+.order-table td.col-name,
+.order-table th.col-name {
+    position: sticky;
+    left: 280px;
+    z-index: 5;
+}
+
+/* Z-index layers: headers must remain on top of body cells */
+.order-table th.col-thumb,
+.order-table th.col-id,
+.order-table th.col-type,
+.order-table th.col-code,
+.order-table th.col-name {
+    z-index: 30;
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+/* Z-index layers: totals row cells must remain on top of body cells but below headers */
+.totals-row td.col-thumb,
+.totals-row td.col-id,
+.totals-row td.col-type,
+.totals-row td.col-code,
+.totals-row td.col-name {
+    position: sticky;
+    z-index: 29;
+    background-color: #e6f0fa !important;
+}
+
+/* Right dividing border for the last frozen column */
+.order-table th.col-name,
+.order-table td.col-name {
+    border-right: 2px solid #94a3b8 !important;
+}
+
+/* Zebra striping and row-state backgrounds for sticky columns */
+.order-table tbody tr:nth-child(even) td.col-thumb,
+.order-table tbody tr:nth-child(even) td.col-id,
+.order-table tbody tr:nth-child(even) td.col-type,
+.order-table tbody tr:nth-child(even) td.col-code,
+.order-table tbody tr:nth-child(even) td.col-name {
+    background-color: #ffffff;
+}
+
+.order-table tbody tr:nth-child(odd) td.col-thumb,
+.order-table tbody tr:nth-child(odd) td.col-id,
+.order-table tbody tr:nth-child(odd) td.col-type,
+.order-table tbody tr:nth-child(odd) td.col-code,
+.order-table tbody tr:nth-child(odd) td.col-name {
+    background-color: #f0fdf4;
+}
+
+.order-table tbody tr:hover td.col-thumb,
+.order-table tbody tr:hover td.col-id,
+.order-table tbody tr:hover td.col-type,
+.order-table tbody tr:hover td.col-code,
+.order-table tbody tr:hover td.col-name {
+    background-color: #e0effe !important;
+}
+
+.order-table tbody tr.row-non-editable td.col-thumb,
+.order-table tbody tr.row-non-editable td.col-id,
+.order-table tbody tr.row-non-editable td.col-type,
+.order-table tbody tr.row-non-editable td.col-code,
+.order-table tbody tr.row-non-editable td.col-name {
+    background-color: #e2e8f0 !important;
+}
+
+.order-table tbody tr.row-dirty td.col-thumb,
+.order-table tbody tr.row-dirty td.col-id,
+.order-table tbody tr.row-dirty td.col-type,
+.order-table tbody tr.row-dirty td.col-code,
+.order-table tbody tr.row-dirty td.col-name {
+    background-color: #dbeafe !important;
+}
+
+/* Disable stickiness in print mode to prevent breaking layouts */
+@media print {
+    .order-table th,
+    .order-table td,
+    .totals-row td {
+        position: static !important;
+        border-right: 1px solid #000 !important;
+    }
+    .table-header-tools {
+        display: none !important;
+    }
+}
