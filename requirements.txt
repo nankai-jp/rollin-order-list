@@ -1,0 +1,2 @@
+# No external python dependencies required.
+# Standard library modules (sqlite3, csv, http.server, etc.) are used.
