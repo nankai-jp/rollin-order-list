@@ -1407,3 +1407,17 @@ body {
         padding: 1rem 1.25rem;
     }
 }
+
+/* 画面表示でのサイズ列ヘッダーのフォント調整 */
+.order-table th.col-size {
+    line-height: 1.15 !important;
+    padding: 0.3rem 0.1rem !important;
+}
+
+.size-suffix {
+    font-size: 0.65rem;
+    font-weight: normal;
+    display: block;
+    margin-top: 1px;
+    opacity: 0.75;
+}

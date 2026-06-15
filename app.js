@@ -190,9 +190,17 @@ function renderHeader() {
     appState.visibleColIndices.forEach(idx => {
         const headerText = appState.headers[idx];
         const th = document.createElement('th');
-        th.textContent = headerText.replace('\n', ' ');
         
         applyColClass(th, idx);
+        
+        // サイズ列は改行してコンパクトに表示
+        if (idx >= SIZE_START_IDX && idx <= SIZE_END_IDX) {
+            const sizeName = headerText.split('(')[0];
+            const suffix = idx < SIZE_START_IDX + 5 ? 'Std' : 'BD';
+            th.innerHTML = `${sizeName}<br><span class="size-suffix">${suffix}</span>`;
+        } else {
+            th.textContent = headerText.replace('\n', ' ');
+        }
         
         elements.tableHeaderRow.appendChild(th);
     });
@@ -575,14 +583,7 @@ function triggerPrint() {
         }
     });
 
-    // サイズ列ヘッダーの文字切れ対策（S(Std) ➔ S <br> Std に分割表示）
-    const sizeThs = tableSectionClone.querySelectorAll('thead th.col-size');
-    sizeThs.forEach((th, idx) => {
-        const text = th.textContent.trim();
-        const sizeName = text.split('(')[0];
-        const suffix = idx < 5 ? 'Std' : 'BD';
-        th.innerHTML = `${sizeName}<br><span style="font-size: 6.5pt; font-weight: normal; display: block; margin-top: 1px; color: #475569;">${suffix}</span>`;
-    });
+
 
     const html = `
 <!DOCTYPE html>
@@ -708,6 +709,13 @@ function triggerPrint() {
             font-size: 8.5pt !important;
             line-height: 1.0 !important;
             padding: 4px 1px !important;
+        }
+        .size-suffix {
+            font-size: 6.5pt !important;
+            font-weight: normal !important;
+            display: block !important;
+            margin-top: 1px !important;
+            color: #475569 !important;
         }
     </style>
 </head>
