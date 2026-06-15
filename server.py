@@ -12,45 +12,57 @@ BASE_FOLDER_NAME = "注文リスト管理"
 DATABASE_FILE = os.environ.get("DATABASE_PATH", "database.db")
 
 def init_db():
-    conn = sqlite3.connect(DATABASE_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        order_number TEXT UNIQUE NOT NULL,
-        company_name TEXT NOT NULL,
-        contact_name TEXT NOT NULL,
-        phone_number TEXT NOT NULL,
-        total_quantity INTEGER NOT NULL,
-        total_amount REAL NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS order_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        order_id INTEGER NOT NULL,
-        product_code TEXT NOT NULL,
-        product_name TEXT NOT NULL,
-        body TEXT NOT NULL,
-        design TEXT NOT NULL,
-        wholesale_price REAL NOT NULL,
-        qty_s_std INTEGER DEFAULT 0,
-        qty_m_std INTEGER DEFAULT 0,
-        qty_l_std INTEGER DEFAULT 0,
-        qty_xl_std INTEGER DEFAULT 0,
-        qty_xxl_std INTEGER DEFAULT 0,
-        qty_s_bd INTEGER DEFAULT 0,
-        qty_m_bd INTEGER DEFAULT 0,
-        qty_l_bd INTEGER DEFAULT 0,
-        qty_xl_bd INTEGER DEFAULT 0,
-        qty_xxl_bd INTEGER DEFAULT 0,
-        subtotal_amount REAL NOT NULL,
-        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
-    )
-    """)
-    conn.commit()
-    conn.close()
+    print(f"Initializing database at: {DATABASE_FILE}")
+    try:
+        # Create parent directory for DB file if it doesn't exist
+        db_dir = os.path.dirname(DATABASE_FILE)
+        if db_dir and not os.path.exists(db_dir):
+            print(f"Creating database directory: {db_dir}")
+            os.makedirs(db_dir, exist_ok=True)
+
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_number TEXT UNIQUE NOT NULL,
+            company_name TEXT NOT NULL,
+            contact_name TEXT NOT NULL,
+            phone_number TEXT NOT NULL,
+            total_quantity INTEGER NOT NULL,
+            total_amount REAL NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            product_code TEXT NOT NULL,
+            product_name TEXT NOT NULL,
+            body TEXT NOT NULL,
+            design TEXT NOT NULL,
+            wholesale_price REAL NOT NULL,
+            qty_s_std INTEGER DEFAULT 0,
+            qty_m_std INTEGER DEFAULT 0,
+            qty_l_std INTEGER DEFAULT 0,
+            qty_xl_std INTEGER DEFAULT 0,
+            qty_xxl_std INTEGER DEFAULT 0,
+            qty_s_bd INTEGER DEFAULT 0,
+            qty_m_bd INTEGER DEFAULT 0,
+            qty_l_bd INTEGER DEFAULT 0,
+            qty_xl_bd INTEGER DEFAULT 0,
+            qty_xxl_bd INTEGER DEFAULT 0,
+            subtotal_amount REAL NOT NULL,
+            FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+        )
+        """)
+        conn.commit()
+        conn.close()
+        print("Database initialization successful.")
+    except Exception as e:
+        print(f"CRITICAL: Database initialization failed: {str(e)}")
+        raise e
 
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
