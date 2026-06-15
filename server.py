@@ -12,15 +12,27 @@ BASE_FOLDER_NAME = "注文リスト管理"
 DATABASE_FILE = os.environ.get("DATABASE_PATH", "database.db")
 
 def init_db():
+    global DATABASE_FILE
     print(f"Initializing database at: {DATABASE_FILE}")
     try:
         # Create parent directory for DB file if it doesn't exist
         db_dir = os.path.dirname(DATABASE_FILE)
         if db_dir and not os.path.exists(db_dir):
-            print(f"Creating database directory: {db_dir}")
-            os.makedirs(db_dir, exist_ok=True)
+            try:
+                print(f"Creating database directory: {db_dir}")
+                os.makedirs(db_dir, exist_ok=True)
+            except PermissionError:
+                print(f"Permission denied for directory {db_dir}. Falling back to local file.")
+                DATABASE_FILE = "database.db"
 
         conn = sqlite3.connect(DATABASE_FILE)
+    except (PermissionError, sqlite3.OperationalError) as e:
+        print(f"WARNING: Database connection to {DATABASE_FILE} failed: {str(e)}")
+        print("Falling back to local database.db")
+        DATABASE_FILE = "database.db"
+        conn = sqlite3.connect(DATABASE_FILE)
+
+    try:
         cursor = conn.cursor()
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS orders (
