@@ -190,8 +190,8 @@ function renderOrders() {
         tr.innerHTML = `
             <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td>${formattedDate}</td>
-            <td style="font-weight: bold; color: var(--primary);">${order.maker_order_number}</td>
-            <td>${order.source_order_number ? order.source_order_number : '<span style="color:var(--text-secondary)">社内直接発注</span>'}</td>
+            <td style="font-weight: bold; color: var(--primary);" title="${order.maker_order_number}">${order.maker_order_number}</td>
+            <td title="${order.source_order_number ? order.source_order_number : '社内直接発注'}">${order.source_order_number ? order.source_order_number : '<span style="color:var(--text-secondary)">社内直接発注</span>'}</td>
             <td style="text-align: right; font-weight: bold;">${order.total_quantity}</td>
             <td><span class="badge ${badgeClass}">${order.status}</span></td>
             <td style="vertical-align: middle;">${printHtml}</td>
@@ -270,10 +270,10 @@ async function openOrderDetails(orderId) {
             tr.innerHTML = `
                 <td style="border: 1px solid #cbd5e1; text-align: center;">${index + 1}</td>
                 <td style="border: 1px solid #cbd5e1; text-align: center; vertical-align: middle;">${imgHtml}</td>
-                <td style="border: 1px solid #cbd5e1; font-weight:bold;">${item.product_code}</td>
+                <td style="border: 1px solid #cbd5e1; font-weight:bold;" title="${item.product_code}">${item.product_code}</td>
                 <td style="border: 1px solid #cbd5e1; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
-                <td style="border: 1px solid #cbd5e1;">${item.body}</td>
-                <td style="border: 1px solid #cbd5e1;">${item.design}</td>
+                <td style="border: 1px solid #cbd5e1;" title="${item.body}">${item.body}</td>
+                <td style="border: 1px solid #cbd5e1;" title="${item.design}">${item.design}</td>
                 ${sizeCellsHtml}
                 <td style="border: 1px solid #cbd5e1; text-align: center;">${printFileCell}</td>
             `;
