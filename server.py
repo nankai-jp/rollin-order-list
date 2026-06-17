@@ -676,6 +676,39 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                     for f in os.listdir(print_folder):
                                         if os.path.isfile(os.path.join(print_folder, f)):
                                             scanned_prints.add(f)
+                                            
+                            # Fallback: if no print files found in custom subfolder, scan other subfolders of the same product
+                            if not scanned_prints:
+                                for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                    product_folder = os.path.join(base_dir, target_parent)
+                                    if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                                        for sub in os.listdir(product_folder):
+                                            if cleaned_d in sub and sub != "print":
+                                                fallback_print_folder = os.path.join(product_folder, sub, "print")
+                                                if os.path.exists(fallback_print_folder) and os.path.isdir(fallback_print_folder):
+                                                    for f in os.listdir(fallback_print_folder):
+                                                        if os.path.isfile(os.path.join(fallback_print_folder, f)):
+                                                            scanned_prints.add(f)
+                                                    if scanned_prints:
+                                                        break
+                                        if scanned_prints:
+                                            break
+                                            
+                                if not scanned_prints:
+                                    for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                        product_folder = os.path.join(base_dir, target_parent)
+                                        if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                                            for sub in os.listdir(product_folder):
+                                                if sub != "print":
+                                                    fallback_print_folder = os.path.join(product_folder, sub, "print")
+                                                    if os.path.exists(fallback_print_folder) and os.path.isdir(fallback_print_folder):
+                                                        for f in os.listdir(fallback_print_folder):
+                                                            if os.path.isfile(os.path.join(fallback_print_folder, f)):
+                                                                scanned_prints.add(f)
+                                                        if scanned_prints:
+                                                            break
+                                            if scanned_prints:
+                                                break
                             
                             for filename in sorted(list(scanned_prints)):
                                 download_url = f"/api/download-print?product_code={product_code}&body={urllib.parse.quote(body_val)}&design={urllib.parse.quote(design_val)}&filename={urllib.parse.quote(filename)}&token={token}"
@@ -833,6 +866,39 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                 for f in os.listdir(print_folder):
                                     if os.path.isfile(os.path.join(print_folder, f)):
                                         scanned_prints.add(f)
+                                        
+                        # Fallback: if no print files found in custom subfolder, scan other subfolders of the same product
+                        if not scanned_prints:
+                            for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                product_folder = os.path.join(base_dir, target_parent)
+                                if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                                    for sub in os.listdir(product_folder):
+                                        if cleaned_d in sub and sub != "print":
+                                            fallback_print_folder = os.path.join(product_folder, sub, "print")
+                                            if os.path.exists(fallback_print_folder) and os.path.isdir(fallback_print_folder):
+                                                for f in os.listdir(fallback_print_folder):
+                                                    if os.path.isfile(os.path.join(fallback_print_folder, f)):
+                                                        scanned_prints.add(f)
+                                                if scanned_prints:
+                                                    break
+                                    if scanned_prints:
+                                        break
+                                        
+                            if not scanned_prints:
+                                for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                    product_folder = os.path.join(base_dir, target_parent)
+                                    if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                                        for sub in os.listdir(product_folder):
+                                            if sub != "print":
+                                                fallback_print_folder = os.path.join(product_folder, sub, "print")
+                                                if os.path.exists(fallback_print_folder) and os.path.isdir(fallback_print_folder):
+                                                    for f in os.listdir(fallback_print_folder):
+                                                        if os.path.isfile(os.path.join(fallback_print_folder, f)):
+                                                            scanned_prints.add(f)
+                                                    if scanned_prints:
+                                                        break
+                                        if scanned_prints:
+                                            break
                         print_files = sorted(list(scanned_prints))
                                 
                     items.append({
@@ -949,6 +1015,39 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                     for f in os.listdir(print_folder):
                                         if os.path.isfile(os.path.join(print_folder, f)):
                                             scanned_prints.add(f)
+                                            
+                            # Fallback: if no print files found in custom subfolder, scan other subfolders of the same product
+                            if not scanned_prints:
+                                for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                    product_folder = os.path.join(base_dir, target_parent)
+                                    if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                                        for sub in os.listdir(product_folder):
+                                            if cleaned_d in sub and sub != "print":
+                                                fallback_print_folder = os.path.join(product_folder, sub, "print")
+                                                if os.path.exists(fallback_print_folder) and os.path.isdir(fallback_print_folder):
+                                                    for f in os.listdir(fallback_print_folder):
+                                                        if os.path.isfile(os.path.join(fallback_print_folder, f)):
+                                                            scanned_prints.add(f)
+                                                    if scanned_prints:
+                                                        break
+                                        if scanned_prints:
+                                            break
+                                            
+                                if not scanned_prints:
+                                    for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                        product_folder = os.path.join(base_dir, target_parent)
+                                        if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                                            for sub in os.listdir(product_folder):
+                                                if sub != "print":
+                                                    fallback_print_folder = os.path.join(product_folder, sub, "print")
+                                                    if os.path.exists(fallback_print_folder) and os.path.isdir(fallback_print_folder):
+                                                        for f in os.listdir(fallback_print_folder):
+                                                            if os.path.isfile(os.path.join(fallback_print_folder, f)):
+                                                                scanned_prints.add(f)
+                                                        if scanned_prints:
+                                                            break
+                                            if scanned_prints:
+                                                break
                             
                             for filename in sorted(list(scanned_prints)):
                                 download_url = f"/api/download-print?product_code={product_code}&body={urllib.parse.quote(body_val)}&design={urllib.parse.quote(design_val)}&filename={urllib.parse.quote(filename)}&token=rollin-maker"
@@ -1061,26 +1160,59 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             subfolder_name = f"{cleaned_b}_{cleaned_d}"
             print_folder = os.path.join(used_base_dir, target_parent, subfolder_name, "print")
             
-            if not os.path.exists(print_folder) or not os.path.isdir(print_folder):
-                self.send_json({"error": "Print folder not found"}, 404)
-                return
-                
-            files = os.listdir(print_folder)
-            if not files:
+            file_path = None
+            file_name = None
+            
+            # 1. Try to find the file in the exact matching directory
+            if os.path.exists(print_folder) and os.path.isdir(print_folder):
+                files = os.listdir(print_folder)
+                if filename_param and filename_param in files:
+                    file_name = filename_param
+                    file_path = os.path.join(print_folder, filename_param)
+                elif not filename_param and files:
+                    file_name = files[0]
+                    file_path = os.path.join(print_folder, file_name)
+                    
+            # 2. Fallback: Scan sibling subfolders that match the design name
+            if not file_path:
+                product_folder = os.path.join(used_base_dir, target_parent)
+                if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                    for sub in os.listdir(product_folder):
+                        if cleaned_d in sub and sub != "print":
+                            fallback_folder = os.path.join(product_folder, sub, "print")
+                            if os.path.exists(fallback_folder) and os.path.isdir(fallback_folder):
+                                files = os.listdir(fallback_folder)
+                                if filename_param and filename_param in files:
+                                    file_name = filename_param
+                                    file_path = os.path.join(fallback_folder, filename_param)
+                                    break
+                                elif not filename_param and files:
+                                    file_name = files[0]
+                                    file_path = os.path.join(fallback_folder, file_name)
+                                    break
+                                    
+            # 3. Last resort fallback: Scan any subfolder with a print directory
+            if not file_path:
+                product_folder = os.path.join(used_base_dir, target_parent)
+                if os.path.exists(product_folder) and os.path.isdir(product_folder):
+                    for sub in os.listdir(product_folder):
+                        if sub != "print":
+                            fallback_folder = os.path.join(product_folder, sub, "print")
+                            if os.path.exists(fallback_folder) and os.path.isdir(fallback_folder):
+                                files = os.listdir(fallback_folder)
+                                if filename_param and filename_param in files:
+                                    file_name = filename_param
+                                    file_path = os.path.join(fallback_folder, filename_param)
+                                    break
+                                elif not filename_param and files:
+                                    file_name = files[0]
+                                    file_path = os.path.join(fallback_folder, file_name)
+                                    break
+                                    
+            if not file_path or not os.path.exists(file_path):
                 self.send_json({"error": "Print file not found"}, 404)
                 return
                 
-            if filename_param:
-                if filename_param in files:
-                    file_name = filename_param
-                else:
-                    self.send_json({"error": "Specified print file not found"}, 404)
-                    return
-            else:
-                file_name = files[0]
-                
-            file_path = os.path.join(print_folder, file_name)
-            
             self.send_response(200)
             quoted_filename = urllib.parse.quote(file_name)
             self.send_header('Content-Type', 'application/octet-stream')
