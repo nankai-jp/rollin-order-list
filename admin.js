@@ -198,7 +198,7 @@ async function updateSystemStatus() {
             
             let warningMsg = `⚠️ 警告: <strong>一時ディスク（危険 - 再起動でデータが消えます）</strong> | 保存先: <code style="font-family: monospace;">${data.database_path}</code>。`;
             if (data.is_fallback) {
-                warningMsg += `（永続ディスクの書き込みエラーが発生したため、一時ストレージに自動切り替えされています。マウント権限を確認してください）`;
+                warningMsg += `（エラー詳細: <span style="font-family: monospace; color: #b91c1c;">${data.error_message}</span>）`;
             } else {
                 warningMsg += `Renderの永続ディスク（Disks）および環境変数の設定を確認してください。`;
             }

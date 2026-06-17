@@ -12,9 +12,10 @@ BASE_FOLDER_NAME = os.environ.get("BASE_FOLDER_PATH", "注文リスト管理")
 DATABASE_FILE = os.environ.get("DATABASE_PATH", "database.db")
 
 IS_DATABASE_FALLBACK = False
+DATABASE_ERROR_MESSAGE = ""
 
 def init_db():
-    global DATABASE_FILE, IS_DATABASE_FALLBACK
+    global DATABASE_FILE, IS_DATABASE_FALLBACK, DATABASE_ERROR_MESSAGE
     print(f"Initializing database at: {DATABASE_FILE}")
     
     db_dir = os.path.dirname(DATABASE_FILE)
@@ -27,6 +28,7 @@ def init_db():
             print("Falling back to local database.db")
             DATABASE_FILE = "database.db"
             IS_DATABASE_FALLBACK = True
+            DATABASE_ERROR_MESSAGE = f"Directory creation failed ({db_dir}): {str(e)}"
 
     try:
         conn = sqlite3.connect(DATABASE_FILE)
@@ -35,6 +37,7 @@ def init_db():
         print("Falling back to local database.db")
         DATABASE_FILE = "database.db"
         IS_DATABASE_FALLBACK = True
+        DATABASE_ERROR_MESSAGE = f"DB connection failed ({DATABASE_FILE}): {str(e)}"
         conn = sqlite3.connect(DATABASE_FILE)
 
     try:
@@ -778,7 +781,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 "is_persistent": is_persistent and not IS_DATABASE_FALLBACK,
                 "is_writable": is_db_dir_writable,
                 "base_folder_path": BASE_FOLDER_NAME,
-                "is_fallback": IS_DATABASE_FALLBACK
+                "is_fallback": IS_DATABASE_FALLBACK,
+                "error_message": DATABASE_ERROR_MESSAGE
             })
             return
 
