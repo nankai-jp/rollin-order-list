@@ -593,15 +593,9 @@ elements.btnMakerCreateAddRow.addEventListener('click', () => {
     if (idx === "") return;
     const prod = masterProducts[idx];
     
-    // 重複チェック
     const code = prod.values[2];
     const body = prod.values[4];
     const design = prod.values[5];
-    const exists = makerCreateState.items.some(it => it.product_code === code && it.body === body && it.design === design);
-    if (exists) {
-        showToast("すでにリストに追加されています。", "error");
-        return;
-    }
 
     makerCreateState.items.push({
         product_code: code,
@@ -659,7 +653,10 @@ function renderMakerCreateList() {
             <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td style="font-weight:bold;">${item.product_code}</td>
             <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
-            <td>${item.body}</td>
+            <td style="padding: 4px;">
+                <input type="text" class="body-input-field" value="${item.body}" data-index="${index}" 
+                       style="width: 100px; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.85rem;">
+            </td>
             <td>${item.design}</td>
             ${sizeInputsHtml}
             <td style="text-align: center;">
@@ -684,6 +681,15 @@ function renderMakerCreateList() {
             const qtyIdx = parseInt(e.target.getAttribute('data-qty-index'));
             const val = parseInt(e.target.value) || 0;
             makerCreateState.items[itemIdx].qtys[qtyIdx] = Math.max(0, val);
+        });
+    });
+
+    // ボディ入力フィールド値変更のバインド
+    document.querySelectorAll('.body-input-field').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.getAttribute('data-index'));
+            const val = e.target.value.trim();
+            makerCreateState.items[idx].body = val;
         });
     });
 }
