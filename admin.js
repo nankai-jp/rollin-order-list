@@ -836,6 +836,7 @@ elements.printSearchInput.addEventListener('input', renderPrintMaster);
 let currentUploadMetadata = null;
 const hiddenFileInput = document.createElement('input');
 hiddenFileInput.type = 'file';
+hiddenFileInput.multiple = true; // 複数ファイル選択を有効化
 hiddenFileInput.style.display = 'none';
 document.body.appendChild(hiddenFileInput);
 
@@ -847,36 +848,50 @@ function triggerUploadFileInput(code, name, body, design) {
 
 hiddenFileInput.addEventListener('change', async (e) => {
     if (!e.target.files.length || !currentUploadMetadata) return;
-    const file = e.target.files[0];
     
-    const formData = new FormData();
-    formData.append('token', adminState.token);
-    formData.append('product_code', currentUploadMetadata.code);
-    formData.append('product_name', currentUploadMetadata.name);
-    formData.append('body', currentUploadMetadata.body);
-    formData.append('design', currentUploadMetadata.design);
-    formData.append('file', file);
+    const files = Array.from(e.target.files);
+    showToast(`${files.length}個のファイルをアップロードしています...`, "info");
+    
+    let successCount = 0;
+    let errorMsg = null;
+    
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('token', adminState.token);
+        formData.append('product_code', currentUploadMetadata.code);
+        formData.append('product_name', currentUploadMetadata.name);
+        formData.append('body', currentUploadMetadata.body);
+        formData.append('design', currentUploadMetadata.design);
+        formData.append('file', file);
 
-    try {
-        showToast("ファイルをアップロードしています...", "info");
-        const response = await fetch('/api/admin/upload-print', {
-            method: 'POST',
-            body: formData
-        });
+        try {
+            const response = await fetch('/api/admin/upload-print', {
+                method: 'POST',
+                body: formData
+            });
 
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error || "ファイルのアップロードに失敗しました。");
+            if (!response.ok) {
+                const err = await response.json();
+                errorMsg = err.error || "ファイルのアップロードに失敗しました。";
+            } else {
+                successCount++;
+            }
+        } catch (error) {
+            console.error("upload error:", error);
+            errorMsg = error.message;
         }
-
-        showToast("プリントデータを登録しました！");
-        loadPrintMaster(); // 再読み込み
-    } catch (error) {
-        console.error("upload error:", error);
-        showToast(error.message, "error");
-    } finally {
-        currentUploadMetadata = null;
     }
+
+    if (successCount > 0) {
+        showToast(`${successCount}個のプリントデータを登録しました！`);
+        loadPrintMaster(); // 再読み込み
+    }
+    
+    if (errorMsg) {
+        showToast(errorMsg, "error");
+    }
+    
+    currentUploadMetadata = null;
 });
 
 async function deletePrintFile(code, body, design, filename = "") {
