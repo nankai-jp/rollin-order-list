@@ -13,9 +13,15 @@ URL: https://rollin-three-order.onrender.com
 URL: https://rollin-three-order.onrender.com/admin.html
 ※ログインパスワード: rollin-admin
 
+--------------------------------------------------
+3. 製作業者用（発注確認・プリントデータダウンロード画面）
+--------------------------------------------------
+URL: https://rollin-three-order.onrender.com/maker.html
+※ログインパスワード: rollin-maker
+
 
 --------------------------------------------------
-3. ローカルテスト用（PC内のみでテスト動作させる場合）
+4. ローカルテスト用（PC内のみでテスト動作させる場合）
 --------------------------------------------------
 ■ お客様用（発注画面）
 http://localhost:8000
