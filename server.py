@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 PORT = int(os.environ.get("PORT", 8000))
 CSV_FILENAME = "注文リスト.csv"
-BASE_FOLDER_NAME = "注文リスト管理"
+BASE_FOLDER_NAME = os.environ.get("BASE_FOLDER_PATH", "注文リスト管理")
 DATABASE_FILE = os.environ.get("DATABASE_PATH", "database.db")
 
 def init_db():
