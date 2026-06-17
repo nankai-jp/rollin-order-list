@@ -147,7 +147,7 @@ function renderOrders() {
     if (makerState.orders.length === 0) {
         elements.historyTbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                     ご発注依頼データはありません。
                 </td>
             </tr>
@@ -165,13 +165,37 @@ function renderOrders() {
         let badgeClass = 'badge-warning';
         if (order.status === '納品完了') badgeClass = 'badge-success';
 
+        // 代表画像 HTML
+        let imgHtml = '';
+        if (order.thumbnail_url) {
+            imgHtml = `<img src="${order.thumbnail_url}" alt="代表画像" class="col-thumb-img" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; cursor: pointer; transition: transform 0.2s;" onclick="window.open('${order.thumbnail_url}', '_blank')">`;
+        } else {
+            imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
+        }
+
+        // プリントデータ HTML
+        let printHtml = '';
+        if (order.print_files && order.print_files.length > 0) {
+            order.print_files.forEach(file => {
+                printHtml += `
+                    <a href="${file.download_url}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin: 2px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; text-decoration: none; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${file.filename}">
+                        📥 ${file.filename}
+                    </a>
+                `;
+            });
+        } else {
+            printHtml = `<span class="badge badge-warning">未登録</span>`;
+        }
+
         tr.innerHTML = `
+            <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td>${formattedDate}</td>
             <td style="font-weight: bold; color: var(--primary);">${order.maker_order_number}</td>
             <td>${order.source_order_number ? order.source_order_number : '<span style="color:var(--text-secondary)">社内直接発注</span>'}</td>
             <td style="text-align: right; font-weight: bold;">${order.total_quantity}</td>
             <td><span class="badge ${badgeClass}">${order.status}</span></td>
-            <td style="text-align: center;">
+            <td style="vertical-align: middle;">${printHtml}</td>
+            <td style="text-align: center; vertical-align: middle;">
                 <button class="btn btn-secondary btn-detail" data-id="${order.id}">🔍 詳細表示</button>
             </td>
         `;

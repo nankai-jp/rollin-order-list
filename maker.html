@@ -77,6 +77,10 @@
             overflow-y: auto;
             border: 1px solid var(--border-color);
         }
+        .col-thumb-img:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
@@ -109,17 +113,19 @@
         <table class="history-table">
             <thead>
                 <tr>
+                    <th style="width: 60px; text-align: center;">画像</th>
                     <th>発注日時</th>
                     <th>発注番号</th>
                     <th>元顧客発注番号</th>
                     <th style="text-align: right;">総数量</th>
                     <th>ステータス</th>
+                    <th>プリントデータ</th>
                     <th style="text-align: center;">操作</th>
                 </tr>
             </thead>
             <tbody id="history-tbody">
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                         発注データを読み込んでいます...
                     </td>
                 </tr>

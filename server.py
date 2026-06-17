@@ -616,19 +616,86 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 ORDER BY created_at DESC
                 """)
                 rows = cursor.fetchall()
-                conn.close()
                 
                 orders = []
                 for r in rows:
+                    order_id = r[0]
                     created_at_iso = r[5].replace(" ", "T") + "Z" if r[5] else ""
+                    
+                    # Fetch items for this order to find images and print files
+                    cursor.execute("""
+                    SELECT product_code, product_name, body, design
+                    FROM maker_order_items
+                    WHERE maker_order_id = ?
+                    """, (order_id,))
+                    item_rows = cursor.fetchall()
+                    
+                    thumbnail_url = None
+                    print_files = []
+                    
+                    for ir in item_rows:
+                        product_code = ir[0]
+                        body_val = ir[2]
+                        design_val = ir[3]
+                        
+                        prefix = f"{product_code}_"
+                        target_parent = None
+                        for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                            if os.path.exists(base_dir):
+                                for item in os.listdir(base_dir):
+                                    if item.startswith(prefix) and os.path.isdir(os.path.join(base_dir, item)):
+                                        target_parent = item
+                                        break
+                                if target_parent:
+                                    break
+                                    
+                        if target_parent:
+                            cleaned_b = clean_folder_name(body_val)
+                            cleaned_d = clean_folder_name(design_val)
+                            subfolder_name = f"{cleaned_b}_{cleaned_d}"
+                            
+                            # Find thumbnail image (if not set yet)
+                            if not thumbnail_url:
+                                valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+                                for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                    folder_path = os.path.join(base_dir, target_parent, subfolder_name)
+                                    if os.path.exists(folder_path) and os.path.isdir(folder_path):
+                                        found_images = sorted(
+                                            [img for img in os.listdir(folder_path) if os.path.splitext(img)[1].lower() in valid_exts],
+                                            key=natural_sort_key
+                                        )
+                                        if found_images:
+                                            thumbnail_url = f"/images/{target_parent}/{subfolder_name}/{found_images[0]}"
+                                            break
+                            
+                            # Scan print files
+                            scanned_prints = set()
+                            for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                                print_folder = os.path.join(base_dir, target_parent, subfolder_name, "print")
+                                if os.path.exists(print_folder) and os.path.isdir(print_folder):
+                                    for f in os.listdir(print_folder):
+                                        if os.path.isfile(os.path.join(print_folder, f)):
+                                            scanned_prints.add(f)
+                            
+                            for filename in sorted(list(scanned_prints)):
+                                download_url = f"/api/download-print?product_code={product_code}&body={urllib.parse.quote(body_val)}&design={urllib.parse.quote(design_val)}&filename={urllib.parse.quote(filename)}&token={token}"
+                                print_files.append({
+                                    "product_code": product_code,
+                                    "filename": filename,
+                                    "download_url": download_url
+                                })
+                                
                     orders.append({
-                        "id": r[0],
+                        "id": order_id,
                         "maker_order_number": r[1],
                         "source_order_number": r[2] or "",
                         "total_quantity": r[3],
                         "status": r[4],
-                        "created_at": created_at_iso
+                        "created_at": created_at_iso,
+                        "thumbnail_url": thumbnail_url,
+                        "print_files": print_files
                     })
+                conn.close()
                 self.send_json({"orders": orders})
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
