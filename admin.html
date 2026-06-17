@@ -406,7 +406,32 @@
                             <th style="width: 100px;">ボディ品番</th>
                             <th style="width: 100px;">デザイン</th>
                             <th style="width: 54px; text-align: center;">S<br>(Std)</th>
-        <!-- 製作業者発注詳細モーダル -->
+                            <th style="width: 54px; text-align: center;">M<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">L<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">XL<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">XXL<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">S<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">M<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">L<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">XL<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">XXL<br>(BD)</th>
+                            <th style="width: 50px; text-align: center;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maker-create-tbody">
+                        <!-- 商品リストが動的に追加されます -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button class="btn btn-secondary" id="btn-maker-create-cancel">キャンセル</button>
+                <button class="btn btn-primary" id="btn-maker-create-submit" style="background-color: #4f46e5;">製作業者へ発注依頼する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 製作業者発注詳細モーダル -->
     <div class="modal" id="maker-detail-modal">
         <div class="modal-content" style="max-width: 950px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
             <button class="close-btn" id="close-maker-detail-modal-btn" style="position: absolute; right: 1.5rem; top: 1rem;">&times;</button>
