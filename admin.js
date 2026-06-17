@@ -265,7 +265,11 @@ async function openOrderDetails(orderId) {
             const images = item.images || [];
             let imgHtml = '';
             if (images.length > 0) {
-                imgHtml = `<img src="${images[0]}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+                imgHtml = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
+                images.forEach(imgUrl => {
+                    imgHtml += `<img src="${imgUrl}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">`;
+                });
+                imgHtml += `</div>`;
             } else {
                 imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
             }
@@ -444,7 +448,11 @@ async function openMakerOrderDetails(orderId) {
             const images = item.images || [];
             let imgHtml = '';
             if (images.length > 0) {
-                imgHtml = `<img src="${images[0]}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+                imgHtml = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
+                images.forEach(imgUrl => {
+                    imgHtml += `<img src="${imgUrl}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">`;
+                });
+                imgHtml += `</div>`;
             } else {
                 imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
             }
@@ -637,7 +645,11 @@ function renderMakerCreateList() {
         const images = item.images || [];
         let imgHtml = '';
         if (images.length > 0) {
-            imgHtml = `<img src="${images[0]}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+            imgHtml = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
+            images.forEach(imgUrl => {
+                imgHtml += `<img src="${imgUrl}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">`;
+            });
+            imgHtml += `</div>`;
         } else {
             imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
         }
@@ -771,7 +783,11 @@ function renderPrintMaster() {
 
         let imgHtml = '';
         if (images.length > 0) {
-            imgHtml = `<img src="${images[0]}" alt="${name}" class="col-thumb-img" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+            imgHtml = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
+            images.forEach(imgUrl => {
+                imgHtml += `<img src="${imgUrl}" alt="${name}" class="col-thumb-img" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">`;
+            });
+            imgHtml += `</div>`;
         } else {
             imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
         }
