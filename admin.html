@@ -123,10 +123,21 @@
             body * {
                 visibility: hidden;
             }
-            #print-area-wrapper, #print-area-wrapper * {
+            body.print-mode-customer #print-area-wrapper,
+            body.print-mode-customer #print-area-wrapper * {
                 visibility: visible;
             }
-            #print-area-wrapper {
+            body.print-mode-customer #print-area-wrapper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            body.print-mode-maker #maker-print-area-wrapper,
+            body.print-mode-maker #maker-print-area-wrapper * {
+                visibility: visible;
+            }
+            body.print-mode-maker #maker-print-area-wrapper {
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -145,10 +156,7 @@
                 max-height: none !important;
                 overflow: visible !important;
             }
-            .modal-footer {
-                display: none !important;
-            }
-            .close-btn {
+            .modal-footer, .close-btn, .hide-on-print {
                 display: none !important;
             }
         }
@@ -271,7 +279,7 @@
                         <th style="width: 60px; text-align: center;">画像</th>
                         <th>品番</th>
                         <th>商品名</th>
-                        <th>ボディ</th>
+                        <th>ボディカラー</th>
                         <th>デザイン</th>
                         <th>プリントデータ状態</th>
                         <th style="text-align: center;">操作</th>
@@ -320,7 +328,7 @@
                             <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 60px;">画像</th>
                             <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 80px;">品番</th>
                             <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 140px;">商品名</th>
-                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 80px;">ボディ</th>
+                            <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 80px;">ボディカラー</th>
                             <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 80px;">デザイン</th>
                             <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 60px;">価格</th>
                             <th style="border: 1px solid #000; padding: 6px 4px; font-weight: 600; text-align: center; width: 42px;">S<br>(Std)</th>
@@ -395,109 +403,88 @@
                             <th style="width: 60px; text-align: center;">画像</th>
                             <th style="width: 90px;">品番</th>
                             <th>商品名</th>
-                            <th style="width: 100px;">ボディ</th>
+                            <th style="width: 100px;">ボディ品番</th>
                             <th style="width: 100px;">デザイン</th>
                             <th style="width: 54px; text-align: center;">S<br>(Std)</th>
-                            <th style="width: 54px; text-align: center;">M<br>(Std)</th>
-                            <th style="width: 54px; text-align: center;">L<br>(Std)</th>
-                            <th style="width: 54px; text-align: center;">XL<br>(Std)</th>
-                            <th style="width: 54px; text-align: center;">XXL<br>(Std)</th>
-                            <th style="width: 54px; text-align: center;">S<br>(BD)</th>
-                            <th style="width: 54px; text-align: center;">M<br>(BD)</th>
-                            <th style="width: 54px; text-align: center;">L<br>(BD)</th>
-                            <th style="width: 54px; text-align: center;">XL<br>(BD)</th>
-                            <th style="width: 54px; text-align: center;">XXL<br>(BD)</th>
-                            <th style="width: 50px; text-align: center;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="maker-create-tbody">
-                        <!-- 商品リストが動的に追加されます -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                <button class="btn btn-secondary" id="btn-maker-create-cancel">キャンセル</button>
-                <button class="btn btn-primary" id="btn-maker-create-submit" style="background-color: #4f46e5;">製作業者へ発注依頼する</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 製作業者発注詳細モーダル -->
+        <!-- 製作業者発注詳細モーダル -->
     <div class="modal" id="maker-detail-modal">
         <div class="modal-content" style="max-width: 950px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
             <button class="close-btn" id="close-maker-detail-modal-btn" style="position: absolute; right: 1.5rem; top: 1rem;">&times;</button>
             
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                <div>
-                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🏭 製作業者発注書</h2>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary);">発注番号: <span id="maker-detail-order-number" style="font-weight: bold; color: var(--primary);">MK-XXXXXX</span></p>
+            <!-- 印刷ターゲットエリア -->
+            <div id="maker-print-area-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🏭 製作業者発注書</h2>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">発注番号: <span id="maker-detail-order-number" style="font-weight: bold; color: var(--primary);">MK-XXXXXX</span></p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">発注日: <span id="maker-detail-order-date">----/--/--</span></p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">元顧客発注番号: <span id="maker-detail-source-number" style="font-weight: 600;">-</span></p>
+                    </div>
                 </div>
-                <div style="text-align: right;">
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">発注日: <span id="maker-detail-order-date">----/--/--</span></p>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary);">元顧客発注番号: <span id="maker-detail-source-number" style="font-weight: 600;">-</span></p>
+
+                <!-- ステータス・削除操作エリア (印刷時は非表示) -->
+                <div style="display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);" class="hide-on-print">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">進行ステータス:</label>
+                        <select id="maker-detail-status-select" class="form-group select" style="padding: 0.35rem 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.88rem; cursor: pointer;">
+                            <option value="発注済">発注済</option>
+                            <option value="製作中">製作中</option>
+                            <option value="納品完了">納品完了</option>
+                        </select>
+                        <button class="btn btn-secondary" id="btn-maker-update-status" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">変更保存</button>
+                    </div>
+                    <button class="btn btn-secondary" id="btn-maker-delete-order" style="background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.5rem 1rem; font-size: 0.85rem;">🗑️ この発注を削除</button>
                 </div>
+
+                <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                    <thead>
+                        <tr style="background-color: #f1f5f9;">
+                            <th style="width: 40px; text-align: center;">＃</th>
+                            <th style="width: 60px; text-align: center;">画像</th>
+                            <th style="width: 90px;">品番</th>
+                            <th>商品名</th>
+                            <th style="width: 80px;">ボディ品番</th>
+                            <th style="width: 80px;">デザイン</th>
+                            <th style="width: 45px; text-align: center;">S</th>
+                            <th style="width: 45px; text-align: center;">M</th>
+                            <th style="width: 45px; text-align: center;">L</th>
+                            <th style="width: 45px; text-align: center;">XL</th>
+                            <th style="width: 45px; text-align: center;">XXL</th>
+                            <th style="width: 45px; text-align: center;">S(BD)</th>
+                            <th style="width: 45px; text-align: center;">M(BD)</th>
+                            <th style="width: 45px; text-align: center;">L(BD)</th>
+                            <th style="width: 45px; text-align: center;">XL(BD)</th>
+                            <th style="width: 45px; text-align: center;">XXL(BD)</th>
+                            <th style="width: 120px; text-align: center;" class="hide-on-print">イラストデータ (.ai)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maker-detail-tbody">
+                        <!-- 明細が動的に追加されます -->
+                    </tbody>
+                    <tfoot>
+                        <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid var(--border-color);">
+                            <td colspan="6" style="padding: 0.6rem; text-align: right;">合計数量</td>
+                            <td id="maker-foot-s-std" style="text-align: center;">0</td>
+                            <td id="maker-foot-m-std" style="text-align: center;">0</td>
+                            <td id="maker-foot-l-std" style="text-align: center;">0</td>
+                            <td id="maker-foot-xl-std" style="text-align: center;">0</td>
+                            <td id="maker-foot-xxl-std" style="text-align: center;">0</td>
+                            <td id="maker-foot-s-bd" style="text-align: center;">0</td>
+                            <td id="maker-foot-m-bd" style="text-align: center;">0</td>
+                            <td id="maker-foot-l-bd" style="text-align: center;">0</td>
+                            <td id="maker-foot-xl-bd" style="text-align: center;">0</td>
+                            <td id="maker-foot-xxl-bd" style="text-align: center;">0</td>
+                            <td id="maker-foot-total" style="text-align: center; color: var(--primary);">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
 
-            <!-- ステータス・削除操作エリア -->
-            <div style="display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">進行ステータス:</label>
-                    <select id="maker-detail-status-select" class="form-group select" style="padding: 0.35rem 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.88rem; cursor: pointer;">
-                        <option value="発注済">発注済</option>
-                        <option value="製作中">製作中</option>
-                        <option value="納品完了">納品完了</option>
-                    </select>
-                    <button class="btn btn-secondary" id="btn-maker-update-status" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">変更保存</button>
-                </div>
-                <button class="btn btn-secondary" id="btn-maker-delete-order" style="background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.5rem 1rem; font-size: 0.85rem;">🗑️ この発注を削除</button>
-            </div>
-
-            <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
-                <thead>
-                    <tr style="background-color: #f1f5f9;">
-                        <th style="width: 40px; text-align: center;">＃</th>
-                        <th style="width: 60px; text-align: center;">画像</th>
-                        <th style="width: 90px;">品番</th>
-                        <th>商品名</th>
-                        <th style="width: 80px;">ボディ</th>
-                        <th style="width: 80px;">デザイン</th>
-                        <th style="width: 45px; text-align: center;">S</th>
-                        <th style="width: 45px; text-align: center;">M</th>
-                        <th style="width: 45px; text-align: center;">L</th>
-                        <th style="width: 45px; text-align: center;">XL</th>
-                        <th style="width: 45px; text-align: center;">XXL</th>
-                        <th style="width: 45px; text-align: center;">S(BD)</th>
-                        <th style="width: 45px; text-align: center;">M(BD)</th>
-                        <th style="width: 45px; text-align: center;">L(BD)</th>
-                        <th style="width: 45px; text-align: center;">XL(BD)</th>
-                        <th style="width: 45px; text-align: center;">XXL(BD)</th>
-                        <th style="width: 120px; text-align: center;">イラストデータ (.ai)</th>
-                    </tr>
-                </thead>
-                <tbody id="maker-detail-tbody">
-                    <!-- 明細が動的に追加されます -->
-                </tbody>
-                <tfoot>
-                    <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid var(--border-color);">
-                        <td colspan="6" style="padding: 0.6rem; text-align: right;">合計数量</td>
-                        <td id="maker-foot-s-std" style="text-align: center;">0</td>
-                        <td id="maker-foot-m-std" style="text-align: center;">0</td>
-                        <td id="maker-foot-l-std" style="text-align: center;">0</td>
-                        <td id="maker-foot-xl-std" style="text-align: center;">0</td>
-                        <td id="maker-foot-xxl-std" style="text-align: center;">0</td>
-                        <td id="maker-foot-s-bd" style="text-align: center;">0</td>
-                        <td id="maker-foot-m-bd" style="text-align: center;">0</td>
-                        <td id="maker-foot-l-bd" style="text-align: center;">0</td>
-                        <td id="maker-foot-xl-bd" style="text-align: center;">0</td>
-                        <td id="maker-foot-xxl-bd" style="text-align: center;">0</td>
-                        <td id="maker-foot-total" style="text-align: center; color: var(--primary);">0</td>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;" class="modal-footer">
                 <button class="btn btn-secondary" id="close-maker-detail-modal-btn-lower">閉じる</button>
+                <button class="btn btn-primary" id="maker-detail-print-btn" style="background-color: #6366f1; border-color: #6366f1;">📄 この発注書を印刷/PDF出力</button>
             </div>
         </div>
     </div>

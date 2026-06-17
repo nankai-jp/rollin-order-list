@@ -275,7 +275,7 @@ async function openOrderDetails(orderId) {
                 <td style="border: 1px solid #cbd5e1;" title="${item.body}">${item.body}</td>
                 <td style="border: 1px solid #cbd5e1;" title="${item.design}">${item.design}</td>
                 ${sizeCellsHtml}
-                <td style="border: 1px solid #cbd5e1; text-align: center;">${printFileCell}</td>
+                <td style="border: 1px solid #cbd5e1; text-align: center;" class="hide-on-print">${printFileCell}</td>
             `;
             elements.detailTbody.appendChild(tr);
         });
@@ -321,6 +321,19 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.closeDetailModalBtn.addEventListener('click', closeDetailModal);
     elements.closeDetailModalBtnLower.addEventListener('click', closeDetailModal);
     
+    // 印刷処理
+    const printBtn = document.getElementById('maker-detail-print-btn');
+    if (printBtn) {
+        printBtn.addEventListener('click', () => {
+            document.body.classList.add('print-mode-maker');
+            window.print();
+        });
+    }
+    
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('print-mode-maker');
+    });
+
     // 背景クリックで閉じる
     elements.detailModal.addEventListener('click', (e) => {
         if (e.target === elements.detailModal) closeDetailModal();

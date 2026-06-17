@@ -81,6 +81,38 @@
             transform: scale(1.08);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            body.print-mode-maker #maker-print-area-wrapper, 
+            body.print-mode-maker #maker-print-area-wrapper * {
+                visibility: visible;
+            }
+            body.print-mode-maker #maker-print-area-wrapper {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .modal {
+                position: absolute !important;
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            .detail-modal-content {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .modal-footer, .close-btn, .hide-on-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -121,89 +153,80 @@
                     <th>ステータス</th>
                     <th>プリントデータ</th>
                     <th style="text-align: center;">操作</th>
-                </tr>
-            </thead>
-            <tbody id="history-tbody">
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        発注データを読み込んでいます...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- 詳細モーダル -->
+                </    <!-- 詳細モーダル -->
     <div class="modal" id="detail-modal">
         <div class="modal-content detail-modal-content">
             <button class="close-btn" id="close-detail-modal-btn" style="position: absolute; right: 1.5rem; top: 1rem;">&times;</button>
             
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                <div>
-                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🏭 製作業者発注書</h2>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary);">発注番号: <span id="detail-order-number" style="font-weight: bold; color: var(--primary);">MK-XXXXXX</span></p>
+            <!-- 印刷ターゲットエリア -->
+            <div id="maker-print-area-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🏭 製作業者発注書</h2>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">発注番号: <span id="detail-order-number" style="font-weight: bold; color: var(--primary);">MK-XXXXXX</span></p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">発注日: <span id="detail-order-date">----/--/--</span></p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">元顧客発注番号: <span id="detail-source-number" style="font-weight: 600;">-</span></p>
+                    </div>
                 </div>
-                <div style="text-align: right;">
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">発注日: <span id="detail-order-date">----/--/--</span></p>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary);">元顧客発注番号: <span id="detail-source-number" style="font-weight: 600;">-</span></p>
+
+                <!-- ステータス表示 (印刷時は非表示) -->
+                <div style="margin-bottom: 1.5rem; background-color: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.5rem;" class="hide-on-print">
+                    <span style="font-weight: 600; font-size: 0.9rem;">現在の進行状況:</span>
+                    <span id="detail-status-badge" class="badge badge-warning">発注済</span>
                 </div>
+
+                <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                    <thead>
+                        <tr style="background-color: #f1f5f9;">
+                            <th style="width: 40px; text-align: center; border: 1px solid #cbd5e1;">＃</th>
+                            <th style="width: 60px; text-align: center; border: 1px solid #cbd5e1;">画像</th>
+                            <th style="width: 90px; border: 1px solid #cbd5e1;">品番</th>
+                            <th style="border: 1px solid #cbd5e1;">商品名</th>
+                            <th style="width: 80px; border: 1px solid #cbd5e1;">ボディ品番</th>
+                            <th style="width: 80px; border: 1px solid #cbd5e1;">デザイン</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S(BD)</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M(BD)</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L(BD)</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL(BD)</th>
+                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL(BD)</th>
+                            <th style="width: 120px; text-align: center; border: 1px solid #cbd5e1;" class="hide-on-print">イラストデータ (.ai)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detail-tbody">
+                        <!-- 明細が挿入されます -->
+                    </tbody>
+                    <tfoot>
+                        <tr style="background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1;">
+                            <td colspan="6" style="padding: 0.6rem; text-align: right; border: 1px solid #cbd5e1;">合計数量</td>
+                            <td id="foot-s-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-m-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-l-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-xl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-xxl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-s-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-m-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-l-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-xl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-xxl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                            <td id="foot-total" style="text-align: center; color: var(--primary); border: 1px solid #cbd5e1;">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
 
-            <!-- ステータス表示 -->
-            <div style="margin-bottom: 1.5rem; background-color: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-weight: 600; font-size: 0.9rem;">現在の進行状況:</span>
-                <span id="detail-status-badge" class="badge badge-warning">発注済</span>
-            </div>
-
-            <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
-                <thead>
-                    <tr style="background-color: #f1f5f9;">
-                        <th style="width: 40px; text-align: center; border: 1px solid #cbd5e1;">＃</th>
-                        <th style="width: 60px; text-align: center; border: 1px solid #cbd5e1;">画像</th>
-                        <th style="width: 90px; border: 1px solid #cbd5e1;">品番</th>
-                        <th style="border: 1px solid #cbd5e1;">商品名</th>
-                        <th style="width: 80px; border: 1px solid #cbd5e1;">ボディ</th>
-                        <th style="width: 80px; border: 1px solid #cbd5e1;">デザイン</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S(BD)</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M(BD)</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L(BD)</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL(BD)</th>
-                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL(BD)</th>
-                        <th style="width: 120px; text-align: center; border: 1px solid #cbd5e1;">イラストデータ (.ai)</th>
-                    </tr>
-                </thead>
-                <tbody id="detail-tbody">
-                    <!-- 明細が挿入されます -->
-                </tbody>
-                <tfoot>
-                    <tr style="background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1;">
-                        <td colspan="6" style="padding: 0.6rem; text-align: right; border: 1px solid #cbd5e1;">合計数量</td>
-                        <td id="foot-s-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-m-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-l-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-xl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-xxl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-s-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-m-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-l-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-xl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-xxl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                        <td id="foot-total" style="text-align: center; color: var(--primary); border: 1px solid #cbd5e1;">0</td>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;" class="modal-footer">
                 <button class="btn btn-secondary" id="close-detail-modal-btn-lower">閉じる</button>
+                <button class="btn btn-primary" id="maker-detail-print-btn" style="background-color: #6366f1; border-color: #6366f1;">📄 この発注書を印刷/PDF出力</button>
             </div>
         </div>
     </div>
-
     <!-- トースト通知 -->
     <div class="toast" id="toast">
         <span class="toast-icon" id="toast-icon">✓</span>

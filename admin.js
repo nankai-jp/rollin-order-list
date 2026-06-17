@@ -537,7 +537,7 @@ async function openMakerOrderDetails(orderId) {
                 <td title="${item.body}">${item.body}</td>
                 <td title="${item.design}">${item.design}</td>
                 ${sizeCellsHtml}
-                <td style="text-align: center;">${printFileCell}</td>
+                <td style="text-align: center;" class="hide-on-print">${printFileCell}</td>
             `;
             elements.makerDetailTbody.appendChild(tr);
         });
@@ -1095,6 +1095,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 印刷処理
     elements.detailPrintBtn.addEventListener('click', () => {
+        document.body.classList.add('print-mode-customer');
+        document.body.classList.remove('print-mode-maker');
         window.print();
+    });
+    
+    const makerPrintBtn = document.getElementById('maker-detail-print-btn');
+    if (makerPrintBtn) {
+        makerPrintBtn.addEventListener('click', () => {
+            document.body.classList.add('print-mode-maker');
+            document.body.classList.remove('print-mode-customer');
+            window.print();
+        });
+    }
+    
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('print-mode-customer', 'print-mode-maker');
     });
 });
