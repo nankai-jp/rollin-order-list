@@ -95,7 +95,8 @@ const elements = {
     makerFootLBd: document.getElementById('maker-foot-l-bd'),
     makerFootXLBd: document.getElementById('maker-foot-xl-bd'),
     makerFootXXLBd: document.getElementById('maker-foot-xxl-bd'),
-    makerFootTotal: document.getElementById('maker-foot-total')
+    makerFootTotal: document.getElementById('maker-foot-total'),
+    btnDeleteOrder: document.getElementById('btn-delete-order')
 };
 
 // トースト通知を表示
@@ -300,6 +301,7 @@ async function openOrderDetails(orderId) {
         });
         
         elements.footGrandTotal.innerHTML = `<strong>¥ ${order.total_amount.toLocaleString()}</strong>`;
+        elements.btnDeleteOrder.onclick = () => deleteOrder(order.id);
         elements.detailModal.classList.add('active');
         
     } catch (error) {
@@ -311,6 +313,27 @@ async function openOrderDetails(orderId) {
 // 顧客詳細モーダルを閉じる
 function closeDetailModal() {
     elements.detailModal.classList.remove('active');
+}
+
+// 顧客注文の削除
+async function deleteOrder(orderId) {
+    if (!confirm("本当にこの顧客注文データを取り消し（削除）しますか？")) return;
+    try {
+        const response = await fetch('/api/admin/orders/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: adminState.token,
+                id: orderId
+            })
+        });
+        if (!response.ok) throw new Error("注文データの削除に失敗しました。");
+        showToast("注文データを取り消しました。");
+        loadHistory();
+        elements.detailModal.classList.remove('active');
+    } catch (error) {
+        showToast(error.message, "error");
+    }
 }
 
 

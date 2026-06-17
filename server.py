@@ -1106,6 +1106,35 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": str(e)}, 500)
             return
 
+        elif path == '/api/admin/orders/delete':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                order_id = req_data.get("id")
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM order_items WHERE order_id = ?", (order_id,))
+                cursor.execute("DELETE FROM orders WHERE id = ?", (order_id,))
+                conn.commit()
+                conn.close()
+                self.send_json({"status": "success"})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
         elif path == '/api/admin/maker-orders/delete':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -1126,6 +1155,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             try:
                 conn = sqlite3.connect(DATABASE_FILE)
                 cursor = conn.cursor()
+                cursor.execute("DELETE FROM maker_order_items WHERE maker_order_id = ?", (order_id,))
                 cursor.execute("DELETE FROM maker_orders WHERE id = ?", (order_id,))
                 conn.commit()
                 conn.close()
