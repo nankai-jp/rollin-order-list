@@ -34,6 +34,72 @@ window.downloadPrintFile = async function(url, filename) {
     }
 };
 
+// 別タブでの印刷用関数（印刷閉じ時のメイン画面消失防止）
+function printElement(elementId) {
+    const printEl = document.getElementById(elementId);
+    if (!printEl) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert("ポップアップがブロックされました。ブラウザの設定でポップアップを許可してください。");
+        return;
+    }
+    printWindow.document.write('<html><head><title>発注書印刷</title>');
+    
+    // スタイルシートとスタイルタグのコピー
+    document.querySelectorAll('link, style').forEach(el => {
+        printWindow.document.write(el.outerHTML);
+    });
+    
+    printWindow.document.write(\`
+        <style>
+            @media screen {
+                body {
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    padding: 20px !important;
+                    font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+                }
+            }
+            @media print {
+                @page {
+                    size: landscape;
+                    margin: 10mm;
+                }
+                body {
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+            }
+            #maker-print-area-wrapper, #print-area-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                display: block !important;
+            }
+            .order-table {
+                width: 100% !important;
+                min-width: 0 !important;
+                table-layout: fixed !important;
+            }
+            .hide-on-print {
+                display: none !important;
+            }
+        </style>
+    \`);
+    
+    printWindow.document.write('</head><body>');
+    printWindow.document.write(printEl.outerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+    }, 600);
+}
+
+
 // DOM要素のキャッシュ
 const elements = {
     loginContainer: document.getElementById('login-container'),
@@ -352,18 +418,13 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.closeDetailModalBtn.addEventListener('click', closeDetailModal);
     elements.closeDetailModalBtnLower.addEventListener('click', closeDetailModal);
     
-    // 印刷処理
+    // 印刷処理 (別タブ起動でメイン画面のクローズを防止)
     const printBtn = document.getElementById('maker-detail-print-btn');
     if (printBtn) {
         printBtn.addEventListener('click', () => {
-            document.body.classList.add('print-mode-maker');
-            window.print();
+            printElement('maker-print-area-wrapper');
         });
     }
-    
-    window.addEventListener('afterprint', () => {
-        document.body.classList.remove('print-mode-maker');
-    });
 
     // 背景クリックで閉じる
     elements.detailModal.addEventListener('click', (e) => {
