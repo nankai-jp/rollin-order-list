@@ -184,7 +184,7 @@ async function updateSystemStatus() {
         
         elements.systemStatusContainer.style.display = 'block';
         
-        if (data.is_persistent) {
+        if (data.is_persistent && !data.is_fallback) {
             elements.systemStatusBadge.style.backgroundColor = '#ecfdf5';
             elements.systemStatusBadge.style.color = '#065f46';
             elements.systemStatusBadge.style.border = '1px solid #a7f3d0';
@@ -195,7 +195,14 @@ async function updateSystemStatus() {
             elements.systemStatusBadge.style.color = '#92400e';
             elements.systemStatusBadge.style.border = '1px solid #fde68a';
             elements.systemStatusDot.style.backgroundColor = '#f59e0b';
-            elements.systemStatusText.innerHTML = `⚠️ 警告: <strong>一時ディスク（危険 - 再起動でデータが消えます）</strong> | 保存先: <code style="font-family: monospace;">${data.database_path}</code>。Renderの永続ディスク設定を確認してください。`;
+            
+            let warningMsg = `⚠️ 警告: <strong>一時ディスク（危険 - 再起動でデータが消えます）</strong> | 保存先: <code style="font-family: monospace;">${data.database_path}</code>。`;
+            if (data.is_fallback) {
+                warningMsg += `（永続ディスクの書き込みエラーが発生したため、一時ストレージに自動切り替えされています。マウント権限を確認してください）`;
+            } else {
+                warningMsg += `Renderの永続ディスク（Disks）および環境変数の設定を確認してください。`;
+            }
+            elements.systemStatusText.innerHTML = warningMsg;
         }
     } catch (e) {
         elements.systemStatusContainer.style.display = 'none';
