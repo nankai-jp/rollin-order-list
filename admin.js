@@ -96,7 +96,11 @@ const elements = {
     makerFootXLBd: document.getElementById('maker-foot-xl-bd'),
     makerFootXXLBd: document.getElementById('maker-foot-xxl-bd'),
     makerFootTotal: document.getElementById('maker-foot-total'),
-    btnDeleteOrder: document.getElementById('btn-delete-order')
+    btnDeleteOrder: document.getElementById('btn-delete-order'),
+    systemStatusContainer: document.getElementById('system-status-container'),
+    systemStatusBadge: document.getElementById('system-status-badge'),
+    systemStatusDot: document.getElementById('system-status-dot'),
+    systemStatusText: document.getElementById('system-status-text')
 };
 
 // トースト通知を表示
@@ -124,6 +128,7 @@ async function initAuth() {
             // 初期タブデータのロード
             loadMakerHistory();
             loadPrintMaster();
+            updateSystemStatus(); // システム接続情報の更新
         } else {
             localStorage.removeItem("admin_password");
             adminState.token = "";
@@ -152,6 +157,7 @@ async function handleLogin() {
         elements.adminDashboard.style.display = 'block';
         loadMakerHistory();
         loadPrintMaster();
+        updateSystemStatus(); // システム接続情報の更新
         showToast("ログインに成功しました。");
     } else {
         adminState.token = "";
@@ -165,7 +171,35 @@ function handleLogout() {
     adminState.token = "";
     elements.loginContainer.style.display = 'block';
     elements.adminDashboard.style.display = 'none';
+    elements.systemStatusContainer.style.display = 'none'; // ステータスも非表示
     showToast("ログアウトしました。");
+}
+
+// システムの接続状況を表示
+async function updateSystemStatus() {
+    try {
+        const response = await fetch(`/api/admin/system-status?token=${encodeURIComponent(adminState.token)}`);
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        
+        elements.systemStatusContainer.style.display = 'block';
+        
+        if (data.is_persistent) {
+            elements.systemStatusBadge.style.backgroundColor = '#ecfdf5';
+            elements.systemStatusBadge.style.color = '#065f46';
+            elements.systemStatusBadge.style.border = '1px solid #a7f3d0';
+            elements.systemStatusDot.style.backgroundColor = '#10b981';
+            elements.systemStatusText.innerHTML = `🟢 データベース接続: <strong>永続ディスク（安全）</strong> | 保存先: <code style="font-family: monospace;">${data.database_path}</code>`;
+        } else {
+            elements.systemStatusBadge.style.backgroundColor = '#fffbeb';
+            elements.systemStatusBadge.style.color = '#92400e';
+            elements.systemStatusBadge.style.border = '1px solid #fde68a';
+            elements.systemStatusDot.style.backgroundColor = '#f59e0b';
+            elements.systemStatusText.innerHTML = `⚠️ 警告: <strong>一時ディスク（危険 - 再起動でデータが消えます）</strong> | 保存先: <code style="font-family: monospace;">${data.database_path}</code>。Renderの永続ディスク設定を確認してください。`;
+        }
+    } catch (e) {
+        elements.systemStatusContainer.style.display = 'none';
+    }
 }
 
 // 履歴一覧の取得 (Tab 1)

@@ -14,23 +14,16 @@ DATABASE_FILE = os.environ.get("DATABASE_PATH", "database.db")
 def init_db():
     global DATABASE_FILE
     print(f"Initializing database at: {DATABASE_FILE}")
-    try:
-        # Create parent directory for DB file if it doesn't exist
-        db_dir = os.path.dirname(DATABASE_FILE)
-        if db_dir and not os.path.exists(db_dir):
-            try:
-                print(f"Creating database directory: {db_dir}")
-                os.makedirs(db_dir, exist_ok=True)
-            except PermissionError:
-                print(f"Permission denied for directory {db_dir}. Falling back to local file.")
-                DATABASE_FILE = "database.db"
+    db_dir = os.path.dirname(DATABASE_FILE)
+    if db_dir and not os.path.exists(db_dir):
+        print(f"Creating database directory: {db_dir}")
+        os.makedirs(db_dir, exist_ok=True)
 
+    try:
         conn = sqlite3.connect(DATABASE_FILE)
-    except (PermissionError, sqlite3.OperationalError) as e:
-        print(f"WARNING: Database connection to {DATABASE_FILE} failed: {str(e)}")
-        print("Falling back to local database.db")
-        DATABASE_FILE = "database.db"
-        conn = sqlite3.connect(DATABASE_FILE)
+    except Exception as e:
+        print(f"CRITICAL: Failed to connect to database at {DATABASE_FILE}: {str(e)}")
+        raise e
 
     try:
         cursor = conn.cursor()
@@ -753,6 +746,27 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"bodies": db_bodies})
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/admin/system-status':
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            token = query_params.get("token", [""])[0].strip()
+            
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            db_dir = os.path.dirname(DATABASE_FILE) or "."
+            is_db_dir_writable = os.access(db_dir, os.W_OK)
+            is_persistent = "/data" in DATABASE_FILE
+            
+            self.send_json({
+                "database_path": DATABASE_FILE,
+                "is_persistent": is_persistent,
+                "is_writable": is_db_dir_writable,
+                "base_folder_path": BASE_FOLDER_NAME
+            })
             return
 
         elif path == '/api/download-print':
