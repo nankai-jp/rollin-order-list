@@ -537,15 +537,7 @@ function renderMakerHistory(orders) {
         let statusClass = 'badge-warning';
         if (order.status === '納品完了') statusClass = 'badge-success';
 
-        let imgHtml = '';
-        if (order.thumbnail_url) {
-            imgHtml = `<img src="${order.thumbnail_url}" alt="代表画像" class="col-thumb-img" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; cursor: pointer; transition: transform 0.2s;" onclick="window.open('${order.thumbnail_url}', '_blank')">`;
-        } else {
-            imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
-        }
-        
         tr.innerHTML = `
-            <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td>${formattedDate}</td>
             <td style="font-weight: bold; color: var(--primary);">${order.maker_order_number}</td>
             <td>${order.source_order_number ? order.source_order_number : '<span style="color:var(--text-secondary)">手動直接発注</span>'}</td>
