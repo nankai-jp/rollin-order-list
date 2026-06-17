@@ -69,6 +69,37 @@ def init_db():
             FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
         )
         """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS maker_orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            maker_order_number TEXT UNIQUE NOT NULL,
+            source_order_number TEXT,
+            total_quantity INTEGER NOT NULL,
+            status TEXT DEFAULT '発注済',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS maker_order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            maker_order_id INTEGER NOT NULL,
+            product_code TEXT NOT NULL,
+            product_name TEXT NOT NULL,
+            body TEXT NOT NULL,
+            design TEXT NOT NULL,
+            qty_s_std INTEGER DEFAULT 0,
+            qty_m_std INTEGER DEFAULT 0,
+            qty_l_std INTEGER DEFAULT 0,
+            qty_xl_std INTEGER DEFAULT 0,
+            qty_xxl_std INTEGER DEFAULT 0,
+            qty_s_bd INTEGER DEFAULT 0,
+            qty_m_bd INTEGER DEFAULT 0,
+            qty_l_bd INTEGER DEFAULT 0,
+            qty_xl_bd INTEGER DEFAULT 0,
+            qty_xxl_bd INTEGER DEFAULT 0,
+            FOREIGN KEY (maker_order_id) REFERENCES maker_orders(id) ON DELETE CASCADE
+        )
+        """)
         conn.commit()
         conn.close()
         print("Database initialization successful.")
@@ -139,6 +170,12 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             return
         elif path == '/app.js':
             self.send_file('app.js', 'application/javascript; charset=utf-8')
+            return
+        elif path == '/maker.html':
+            self.send_file('maker.html', 'text/html; charset=utf-8')
+            return
+        elif path == '/maker.js':
+            self.send_file('maker.js', 'application/javascript; charset=utf-8')
             return
             
         # 画像ファイルの配信 (/images/品番_商品名/画像名)
@@ -233,6 +270,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 # 品番と商品名の両方が存在する場合のみ「編集可能・画像フォルダあり」とする
                 is_editable = bool(p_val and n_val)
                 images = []
+                print_file = None
                 
                 if is_editable:
                     cleaned_n = clean_folder_name(n_val)
@@ -251,12 +289,20 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                             if item_ext in valid_exts:
                                 # ブラウザからアクセス可能な画像URLを構築
                                 images.append(f"/images/{folder_name}/{subfolder_name}/{item}")
+                                
+                        # プリント用フォルダをスキャン
+                        print_folder = os.path.join(folder_path, "print")
+                        if os.path.exists(print_folder) and os.path.isdir(print_folder):
+                            print_files = os.listdir(print_folder)
+                            if print_files:
+                                print_file = print_files[0]
                 
                 data_rows.append({
                     "original_index": i,
                     "is_editable": is_editable,
                     "values": r[:19],  # フロントには19列分（0〜18）だけ送る
-                    "images": images
+                    "images": images,
+                    "print_file": print_file
                 })
                 
             self.send_json({
@@ -491,6 +537,227 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": str(e)}, 500)
             return
             
+        elif path == '/api/maker/orders':
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            token = query_params.get("token", [""])[0].strip()
+            
+            MAKER_PASSWORD = "rollin-maker"
+            if token != MAKER_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at
+                FROM maker_orders
+                ORDER BY created_at DESC
+                """)
+                rows = cursor.fetchall()
+                conn.close()
+                
+                orders = []
+                for r in rows:
+                    created_at_iso = r[5].replace(" ", "T") + "Z" if r[5] else ""
+                    orders.append({
+                        "id": r[0],
+                        "maker_order_number": r[1],
+                        "source_order_number": r[2] or "",
+                        "total_quantity": r[3],
+                        "status": r[4],
+                        "created_at": created_at_iso
+                    })
+                self.send_json({"orders": orders})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/maker/order-details' or path == '/api/admin/maker-order-details':
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            token = query_params.get("token", [""])[0].strip()
+            order_id = query_params.get("id", [""])[0]
+            
+            ADMIN_PASSWORD = "rollin-admin"
+            MAKER_PASSWORD = "rollin-maker"
+            if token != ADMIN_PASSWORD and token != MAKER_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            if not order_id:
+                self.send_json({"error": "Missing order ID"}, 400)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at
+                FROM maker_orders WHERE id = ?
+                """, (order_id,))
+                order_row = cursor.fetchone()
+                if not order_row:
+                    conn.close()
+                    self.send_json({"error": "Order not found"}, 404)
+                    return
+                    
+                created_at_iso = order_row[5].replace(" ", "T") + "Z" if order_row[5] else ""
+                order_summary = {
+                    "id": order_row[0],
+                    "maker_order_number": order_row[1],
+                    "source_order_number": order_row[2] or "",
+                    "total_quantity": order_row[3],
+                    "status": order_row[4],
+                    "created_at": created_at_iso
+                }
+                
+                cursor.execute("""
+                SELECT product_code, product_name, body, design,
+                       qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
+                       qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
+                FROM maker_order_items
+                WHERE maker_order_id = ?
+                """, (order_id,))
+                item_rows = cursor.fetchall()
+                conn.close()
+                
+                items = []
+                for ir in item_rows:
+                    product_code = ir[0]
+                    body_val = ir[2]
+                    design_val = ir[3]
+                    
+                    has_print_file = False
+                    print_filename = None
+                    
+                    prefix = f"{product_code}_"
+                    target_parent = None
+                    if os.path.exists(BASE_FOLDER_NAME):
+                        for item in os.listdir(BASE_FOLDER_NAME):
+                            if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
+                                target_parent = item
+                                break
+                    if target_parent:
+                        cleaned_b = clean_folder_name(body_val)
+                        cleaned_d = clean_folder_name(design_val)
+                        subfolder_name = f"{cleaned_b}_{cleaned_d}"
+                        print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
+                        if os.path.exists(print_folder) and os.path.isdir(print_folder):
+                            files = os.listdir(print_folder)
+                            if files:
+                                has_print_file = True
+                                print_filename = files[0]
+                                
+                    items.append({
+                        "product_code": ir[0],
+                        "product_name": ir[1],
+                        "body": ir[2],
+                        "design": ir[3],
+                        "qtys": list(ir[4:14]),
+                        "has_print_file": has_print_file,
+                        "print_filename": print_filename
+                    })
+                    
+                self.send_json({
+                    "order": order_summary,
+                    "items": items
+                })
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/admin/maker-orders':
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            token = query_params.get("token", [""])[0].strip()
+            
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at
+                FROM maker_orders
+                ORDER BY created_at DESC
+                """)
+                rows = cursor.fetchall()
+                conn.close()
+                
+                orders = []
+                for r in rows:
+                    created_at_iso = r[5].replace(" ", "T") + "Z" if r[5] else ""
+                    orders.append({
+                        "id": r[0],
+                        "maker_order_number": r[1],
+                        "source_order_number": r[2] or "",
+                        "total_quantity": r[3],
+                        "status": r[4],
+                        "created_at": created_at_iso
+                    })
+                self.send_json({"orders": orders})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/download-print':
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            product_code = query_params.get("product_code", [""])[0].strip()
+            body = query_params.get("body", [""])[0].strip()
+            design = query_params.get("design", [""])[0].strip()
+            token = query_params.get("token", [""])[0].strip()
+            
+            ADMIN_PASSWORD = "rollin-admin"
+            MAKER_PASSWORD = "rollin-maker"
+            if token != ADMIN_PASSWORD and token != MAKER_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            if not product_code:
+                self.send_json({"error": "Missing product code"}, 400)
+                return
+                
+            target_parent = None
+            prefix = f"{product_code}_"
+            if os.path.exists(BASE_FOLDER_NAME):
+                for item in os.listdir(BASE_FOLDER_NAME):
+                    if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
+                        target_parent = item
+                        break
+            
+            if not target_parent:
+                self.send_json({"error": "Product folder not found"}, 404)
+                return
+                
+            cleaned_b = clean_folder_name(body)
+            cleaned_d = clean_folder_name(design)
+            subfolder_name = f"{cleaned_b}_{cleaned_d}"
+            print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
+            
+            if not os.path.exists(print_folder) or not os.path.isdir(print_folder):
+                self.send_json({"error": "Print folder not found"}, 404)
+                return
+                
+            files = os.listdir(print_folder)
+            if not files:
+                self.send_json({"error": "Print file not found"}, 404)
+                return
+                
+            file_name = files[0]
+            file_path = os.path.join(print_folder, file_name)
+            
+            self.send_response(200)
+            quoted_filename = urllib.parse.quote(file_name)
+            self.send_header('Content-Type', 'application/octet-stream')
+            self.send_header('Content-Disposition', f"attachment; filename*=UTF-8''{quoted_filename}")
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            with open(file_path, 'rb') as f:
+                self.wfile.write(f.read())
+            return
+            
         else:
             self.send_error(404, "Not Found")
 
@@ -647,6 +914,306 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": f"Database error: {str(e)}"}, 500)
                 return
                 
+        elif path == '/api/maker/login':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                password = req_data.get("password", "").strip()
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            MAKER_PASSWORD = "rollin-maker"
+            if password == MAKER_PASSWORD:
+                self.send_json({"status": "success", "token": MAKER_PASSWORD})
+            else:
+                self.send_json({"error": "パスワードが正しくありません。"}, 401)
+            return
+
+        elif path == '/api/admin/maker-orders/create':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                source_order_number = req_data.get("source_order_number", None)
+                items = req_data.get("items", [])
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            if not items:
+                self.send_json({"error": "発注数量が入力されている商品がありません。"}, 400)
+                return
+                
+            try:
+                import datetime
+                today_str = datetime.datetime.now().strftime("%Y%m%d")
+                
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                
+                # Generate Maker Order Number
+                cursor.execute("SELECT count(*) FROM maker_orders WHERE maker_order_number LIKE ?", (f"MK-{today_str}-%",))
+                count = cursor.fetchone()[0]
+                seq = count + 1
+                maker_order_number = f"MK-{today_str}-{seq:03d}"
+                
+                total_qty = 0
+                db_items = []
+                for item in items:
+                    code = item.get("product_code")
+                    name = item.get("product_name")
+                    body = item.get("body")
+                    design = item.get("design")
+                    qtys = item.get("qtys", [0]*10)
+                    
+                    item_qty = sum(qtys)
+                    total_qty += item_qty
+                    
+                    db_items.append((
+                        code, name, body, design,
+                        qtys[0], qtys[1], qtys[2], qtys[3], qtys[4],
+                        qtys[5], qtys[6], qtys[7], qtys[8], qtys[9]
+                    ))
+                
+                # Insert Maker Order
+                cursor.execute("""
+                INSERT INTO maker_orders (maker_order_number, source_order_number, total_quantity, status)
+                VALUES (?, ?, ?, '発注済')
+                """, (maker_order_number, source_order_number, total_qty))
+                
+                maker_order_id = cursor.lastrowid
+                
+                # Insert Items
+                for db_item in db_items:
+                    cursor.execute("""
+                    INSERT INTO maker_order_items (
+                        maker_order_id, product_code, product_name, body, design,
+                        qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
+                        qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (maker_order_id,) + db_item)
+                    
+                conn.commit()
+                conn.close()
+                
+                self.send_json({"status": "success", "maker_order_number": maker_order_number})
+                
+            except Exception as e:
+                if 'conn' in locals():
+                    conn.rollback()
+                    conn.close()
+                self.send_json({"error": f"Database error: {str(e)}"}, 500)
+                return
+            return
+
+        elif path == '/api/admin/maker-orders/update-status':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                order_id = req_data.get("id")
+                status = req_data.get("status")
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("UPDATE maker_orders SET status = ? WHERE id = ?", (status, order_id))
+                conn.commit()
+                conn.close()
+                self.send_json({"status": "success"})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/admin/maker-orders/delete':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                order_id = req_data.get("id")
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM maker_orders WHERE id = ?", (order_id,))
+                conn.commit()
+                conn.close()
+                self.send_json({"status": "success"})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/admin/upload-print':
+            content_type = self.headers.get('Content-Type', '')
+            if not content_type.startswith('multipart/form-data'):
+                self.send_json({"error": "Content-Type must be multipart/form-data"}, 400)
+                return
+                
+            # Read all body bytes
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            boundary_parts = content_type.split("boundary=")
+            if len(boundary_parts) < 2:
+                self.send_json({"error": "Boundary not found"}, 400)
+                return
+            boundary = boundary_parts[1].encode('utf-8')
+            
+            def parse_multipart(data, bound):
+                parts = data.split(b'--' + bound)
+                res = {}
+                for part in parts:
+                    if not part or part == b'\r\n' or part == b'--\r\n' or part == b'--':
+                        continue
+                    if b'\r\n\r\n' not in part:
+                        continue
+                    headers_part, body_part = part.split(b'\r\n\r\n', 1)
+                    if body_part.endswith(b'\r\n'):
+                        body_part = body_part[:-2]
+                    
+                    headers_str = headers_part.decode('utf-8', errors='ignore')
+                    disposition_match = re.search(r'Content-Disposition:\s*form-data;\s*name="([^"]+)"(?:;\s*filename="([^"]+)")?', headers_str, re.IGNORECASE)
+                    if disposition_match:
+                        name = disposition_match.group(1)
+                        filename = disposition_match.group(2)
+                        if filename:
+                            res[name] = {
+                                "filename": filename,
+                                "content": body_part
+                            }
+                        else:
+                            res[name] = body_part.decode('utf-8', errors='ignore').strip()
+                return res
+
+            try:
+                form_fields = parse_multipart(post_data, boundary)
+            except Exception as e:
+                self.send_json({"error": f"Failed to parse multipart: {str(e)}"}, 400)
+                return
+                
+            token = form_fields.get("token", "")
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            product_code = form_fields.get("product_code", "")
+            product_name = form_fields.get("product_name", "")
+            body = form_fields.get("body", "")
+            design = form_fields.get("design", "")
+            file_data = form_fields.get("file")
+            
+            if not product_code or not product_name or not body or not design or not file_data:
+                self.send_json({"error": "Missing required fields or file"}, 400)
+                return
+                
+            try:
+                cleaned_n = clean_folder_name(product_name)
+                cleaned_b = clean_folder_name(body)
+                cleaned_d = clean_folder_name(design)
+                
+                folder_name = f"{product_code}_{cleaned_n}"
+                subfolder_name = f"{cleaned_b}_{cleaned_d}"
+                print_folder = os.path.join(BASE_FOLDER_NAME, folder_name, subfolder_name, "print")
+                
+                os.makedirs(print_folder, exist_ok=True)
+                
+                # Delete existing files in print folder
+                for item in os.listdir(print_folder):
+                    item_path = os.path.join(print_folder, item)
+                    if os.path.isfile(item_path):
+                        os.remove(item_path)
+                
+                filename = file_data["filename"]
+                filename = os.path.basename(filename)
+                target_file_path = os.path.join(print_folder, filename)
+                
+                with open(target_file_path, "wb") as f:
+                    f.write(file_data["content"])
+                    
+                self.send_json({"status": "success", "filename": filename})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/admin/delete-print':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                product_code = req_data.get("product_code", "")
+                body = req_data.get("body", "")
+                design = req_data.get("design", "")
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                prefix = f"{product_code}_"
+                target_parent = None
+                if os.path.exists(BASE_FOLDER_NAME):
+                    for item in os.listdir(BASE_FOLDER_NAME):
+                        if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
+                            target_parent = item
+                            break
+                            
+                if not target_parent:
+                    self.send_json({"error": "Product folder not found"}, 404)
+                    return
+                    
+                cleaned_b = clean_folder_name(body)
+                cleaned_d = clean_folder_name(design)
+                subfolder_name = f"{cleaned_b}_{cleaned_d}"
+                print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
+                
+                if os.path.exists(print_folder) and os.path.isdir(print_folder):
+                    for item in os.listdir(print_folder):
+                        item_path = os.path.join(print_folder, item)
+                        if os.path.isfile(item_path):
+                            os.remove(item_path)
+                            
+                self.send_json({"status": "success"})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+            
         else:
             self.send_error(404, "Not Found")
 

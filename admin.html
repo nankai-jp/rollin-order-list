@@ -168,41 +168,114 @@
     <!-- 管理者ダッシュボードコンテナ -->
     <div class="admin-container" id="admin-dashboard">
         <div class="admin-header-row">
-            <h1 class="admin-page-title">📦 ROLLIN THREE 受注履歴一覧</h1>
+            <h1 class="admin-page-title">📦 ROLLIN THREE 社内管理画面</h1>
             <div style="display: flex; gap: 0.75rem;">
                 <button class="btn btn-secondary" onclick="location.href='index.html'">⬅ 顧客画面へ</button>
                 <button class="btn btn-secondary btn-logout" id="logout-btn">ログアウト</button>
             </div>
         </div>
 
-        <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-size: 0.95rem; color: var(--text-secondary);">
-                現在登録されているお客様からの発注履歴です。
-            </div>
-            <button class="btn btn-secondary" id="refresh-btn">🔄 履歴を更新</button>
+        <!-- タブメニュー -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="tab-customer-orders">👥 お客様からの注文履歴</button>
+            <button class="tab-btn" data-tab="tab-maker-orders">🏭 製作業者への発注管理</button>
+            <button class="tab-btn" data-tab="tab-print-management">🎨 プリントデータ管理</button>
         </div>
 
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>発注日時</th>
-                    <th>発注番号</th>
-                    <th>貴社名</th>
-                    <th>ご担当者名</th>
-                    <th>お電話番号</th>
-                    <th style="text-align: right;">総発注数量</th>
-                    <th style="text-align: right;">総合計金額</th>
-                    <th style="text-align: center;">操作</th>
-                </tr>
-            </thead>
-            <tbody id="history-tbody">
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        発注履歴を読み込んでいます...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <!-- タブ1: お客様からの注文履歴 -->
+        <div id="tab-customer-orders" class="tab-content active">
+            <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                    現在登録されているお客様からの発注履歴です。
+                </div>
+                <button class="btn btn-secondary" id="refresh-btn">🔄 履歴を更新</button>
+            </div>
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>発注日時</th>
+                        <th>発注番号</th>
+                        <th>貴社名</th>
+                        <th>ご担当者名</th>
+                        <th>お電話番号</th>
+                        <th style="text-align: right;">総発注数量</th>
+                        <th style="text-align: right;">総合計金額</th>
+                        <th style="text-align: center;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            発注履歴を読み込んでいます...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- タブ2: 製作業者への発注管理 -->
+        <div id="tab-maker-orders" class="tab-content">
+            <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                    製作業者（外注先）への発注履歴および進行状況の管理が行えます。
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-primary" id="btn-new-maker-order" style="background-color: #4f46e5;">＋ 新規発注入力</button>
+                    <button class="btn btn-secondary" id="maker-refresh-btn">🔄 履歴を更新</button>
+                </div>
+            </div>
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>発注日時</th>
+                        <th>発注番号</th>
+                        <th>元顧客発注番号</th>
+                        <th style="text-align: right;">総数量</th>
+                        <th>ステータス</th>
+                        <th style="text-align: center;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="maker-history-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            製作業者への発注履歴を読み込んでいます...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- タブ3: プリントデータ管理 -->
+        <div id="tab-print-management" class="tab-content">
+            <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                <div style="font-size: 0.95rem; color: var(--text-secondary); max-width: 700px;">
+                    商品マスタに紐づくプリント用イラストレーターデータ（.aiファイル等）を登録できます。登録されたデータは製作業者からの発注確認時に自動連携されます。
+                </div>
+                <input type="text" id="print-search-input" placeholder="品番や商品名で検索..." class="search-input" style="max-width: 300px;">
+            </div>
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>品番</th>
+                        <th>商品名</th>
+                        <th>ボディ</th>
+                        <th>デザイン</th>
+                        <th>プリントデータ状態</th>
+                        <th style="text-align: center;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="print-master-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            商品データを読み込んでいます...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- 注文詳細（印刷用）モーダル -->
@@ -277,7 +350,140 @@
             <!-- モーダルフッター操作ボタン -->
             <div class="modal-footer" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
                 <button class="btn btn-secondary" id="close-detail-modal-btn-lower">閉じる</button>
+                <button class="btn btn-primary" id="btn-forward-to-maker" style="background-color: #6366f1; border-color: #6366f1;">🏭 製作業者へ発注データ作成</button>
                 <button class="btn btn-primary" id="detail-print-btn">📄 この注文書を印刷/PDF出力</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 製作業者への発注データ作成モーダル -->
+    <div class="modal" id="maker-create-modal">
+        <div class="modal-content" style="max-width: 1100px; padding: 2rem;">
+            <button class="close-btn" id="close-maker-create-modal-btn" style="position: absolute; right: 1.5rem; top: 1rem;">&times;</button>
+            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">🏭 製作業者への発注データ作成</h2>
+            
+            <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem;">
+                <span id="maker-create-source-info">新規手動発注</span>
+            </div>
+
+            <!-- 手動選択用のセクション（手動発注時のみ表示） -->
+            <div id="manual-product-select-area" style="display: none; background-color: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">製品を追加:</label>
+                <select id="maker-create-product-select" class="form-group select" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; flex-grow: 1; max-width: 500px; font-family: var(--font-main);">
+                    <!-- 動的にCSV商品が挿入される -->
+                </select>
+                <button class="btn btn-secondary" id="btn-maker-create-add-row" style="padding: 0.5rem 1rem;">追加</button>
+            </div>
+
+            <div style="max-height: 45vh; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px;">
+                <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9;">
+                            <th style="width: 40px; text-align: center;">＃</th>
+                            <th style="width: 90px;">品番</th>
+                            <th>商品名</th>
+                            <th style="width: 100px;">ボディ</th>
+                            <th style="width: 100px;">デザイン</th>
+                            <th style="width: 54px; text-align: center;">S<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">M<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">L<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">XL<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">XXL<br>(Std)</th>
+                            <th style="width: 54px; text-align: center;">S<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">M<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">L<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">XL<br>(BD)</th>
+                            <th style="width: 54px; text-align: center;">XXL<br>(BD)</th>
+                            <th style="width: 50px; text-align: center;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maker-create-tbody">
+                        <!-- 商品リストが動的に追加されます -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button class="btn btn-secondary" id="btn-maker-create-cancel">キャンセル</button>
+                <button class="btn btn-primary" id="btn-maker-create-submit" style="background-color: #4f46e5;">製作業者へ発注依頼する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 製作業者発注詳細モーダル -->
+    <div class="modal" id="maker-detail-modal">
+        <div class="modal-content" style="max-width: 950px; padding: 2rem; max-height: 90vh; overflow-y: auto;">
+            <button class="close-btn" id="close-maker-detail-modal-btn" style="position: absolute; right: 1.5rem; top: 1rem;">&times;</button>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🏭 製作業者発注書</h2>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">発注番号: <span id="maker-detail-order-number" style="font-weight: bold; color: var(--primary);">MK-XXXXXX</span></p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">発注日: <span id="maker-detail-order-date">----/--/--</span></p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">元顧客発注番号: <span id="maker-detail-source-number" style="font-weight: 600;">-</span></p>
+                </div>
+            </div>
+
+            <!-- ステータス・削除操作エリア -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);">進行ステータス:</label>
+                    <select id="maker-detail-status-select" class="form-group select" style="padding: 0.35rem 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.88rem; cursor: pointer;">
+                        <option value="発注済">発注済</option>
+                        <option value="製作中">製作中</option>
+                        <option value="納品完了">納品完了</option>
+                    </select>
+                    <button class="btn btn-secondary" id="btn-maker-update-status" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">変更保存</button>
+                </div>
+                <button class="btn btn-secondary" id="btn-maker-delete-order" style="background-color: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 0.5rem 1rem; font-size: 0.85rem;">🗑️ この発注を削除</button>
+            </div>
+
+            <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                <thead>
+                    <tr style="background-color: #f1f5f9;">
+                        <th style="width: 40px; text-align: center;">＃</th>
+                        <th style="width: 90px;">品番</th>
+                        <th>商品名</th>
+                        <th style="width: 80px;">ボディ</th>
+                        <th style="width: 80px;">デザイン</th>
+                        <th style="width: 45px; text-align: center;">S</th>
+                        <th style="width: 45px; text-align: center;">M</th>
+                        <th style="width: 45px; text-align: center;">L</th>
+                        <th style="width: 45px; text-align: center;">XL</th>
+                        <th style="width: 45px; text-align: center;">XXL</th>
+                        <th style="width: 45px; text-align: center;">S(BD)</th>
+                        <th style="width: 45px; text-align: center;">M(BD)</th>
+                        <th style="width: 45px; text-align: center;">L(BD)</th>
+                        <th style="width: 45px; text-align: center;">XL(BD)</th>
+                        <th style="width: 45px; text-align: center;">XXL(BD)</th>
+                        <th style="width: 120px; text-align: center;">イラストデータ (.ai)</th>
+                    </tr>
+                </thead>
+                <tbody id="maker-detail-tbody">
+                    <!-- 明細が動的に追加されます -->
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid var(--border-color);">
+                        <td colspan="5" style="padding: 0.6rem; text-align: right;">合計数量</td>
+                        <td id="maker-foot-s-std" style="text-align: center;">0</td>
+                        <td id="maker-foot-m-std" style="text-align: center;">0</td>
+                        <td id="maker-foot-l-std" style="text-align: center;">0</td>
+                        <td id="maker-foot-xl-std" style="text-align: center;">0</td>
+                        <td id="maker-foot-xxl-std" style="text-align: center;">0</td>
+                        <td id="maker-foot-s-bd" style="text-align: center;">0</td>
+                        <td id="maker-foot-m-bd" style="text-align: center;">0</td>
+                        <td id="maker-foot-l-bd" style="text-align: center;">0</td>
+                        <td id="maker-foot-xl-bd" style="text-align: center;">0</td>
+                        <td id="maker-foot-xxl-bd" style="text-align: center;">0</td>
+                        <td id="maker-foot-total" style="text-align: center; color: var(--primary);">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button class="btn btn-secondary" id="close-maker-detail-modal-btn-lower">閉じる</button>
             </div>
         </div>
     </div>

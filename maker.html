@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【製作業者専用】ROLLIN THREE 発注確認ポータル</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts Outfit & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .maker-container {
+            display: none;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .maker-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+        .maker-page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+        .history-table th {
+            background-color: #1e293b;
+            padding: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .history-table tbody tr:nth-child(even) {
+            background-color: #ffffff;
+        }
+        .history-table tbody tr:nth-child(odd) {
+            background-color: #f8fafc;
+        }
+        .history-table tbody tr:hover {
+            background-color: #e0effe;
+        }
+        .btn-logout {
+            background-color: #ef4444;
+            color: white !important;
+        }
+        .btn-logout:hover {
+            background-color: #dc2626;
+        }
+        .detail-modal-content {
+            background-color: #ffffff;
+            border-radius: 16px;
+            max-width: 950px;
+            width: 95%;
+            padding: 2.5rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 簡易認証コンテナ -->
+    <div class="maker-login-container" id="login-container">
+        <h2 class="maker-login-title">🏭 製作業者ログイン</h2>
+        <div class="maker-login-form">
+            <input type="password" id="maker-password-input" placeholder="製作業者用パスワードを入力してください">
+            <button class="btn btn-primary" id="login-btn" style="width: 100%;">ログイン</button>
+        </div>
+    </div>
+
+    <!-- 製作業者ダッシュボードコンテナ -->
+    <div class="maker-container" id="maker-dashboard">
+        <div class="maker-header-row">
+            <h1 class="maker-page-title">🏭 ROLLIN THREE 発注依頼一覧</h1>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn btn-secondary btn-logout" id="logout-btn">ログアウト</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.95rem; color: var(--text-secondary);">
+                ROLLIN THREE からのご発注依頼一覧です。各案件の詳細からプリントデータ（.aiファイル等）を取得できます。
+            </div>
+            <button class="btn btn-secondary" id="refresh-btn">🔄 履歴を更新</button>
+        </div>
+
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>発注日時</th>
+                    <th>発注番号</th>
+                    <th>元顧客発注番号</th>
+                    <th style="text-align: right;">総数量</th>
+                    <th>ステータス</th>
+                    <th style="text-align: center;">操作</th>
+                </tr>
+            </thead>
+            <tbody id="history-tbody">
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        発注データを読み込んでいます...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div class="modal" id="detail-modal">
+        <div class="modal-content detail-modal-content">
+            <button class="close-btn" id="close-detail-modal-btn" style="position: absolute; right: 1.5rem; top: 1rem;">&times;</button>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">🏭 製作業者発注書</h2>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">発注番号: <span id="detail-order-number" style="font-weight: bold; color: var(--primary);">MK-XXXXXX</span></p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">発注日: <span id="detail-order-date">----/--/--</span></p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">元顧客発注番号: <span id="detail-source-number" style="font-weight: 600;">-</span></p>
+                </div>
+            </div>
+
+            <!-- ステータス表示 -->
+            <div style="margin-bottom: 1.5rem; background-color: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-weight: 600; font-size: 0.9rem;">現在の進行状況:</span>
+                <span id="detail-status-badge" class="badge badge-warning">発注済</span>
+            </div>
+
+            <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                <thead>
+                    <tr style="background-color: #f1f5f9;">
+                        <th style="width: 40px; text-align: center; border: 1px solid #cbd5e1;">＃</th>
+                        <th style="width: 90px; border: 1px solid #cbd5e1;">品番</th>
+                        <th style="border: 1px solid #cbd5e1;">商品名</th>
+                        <th style="width: 80px; border: 1px solid #cbd5e1;">ボディ</th>
+                        <th style="width: 80px; border: 1px solid #cbd5e1;">デザイン</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S(BD)</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M(BD)</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L(BD)</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL(BD)</th>
+                        <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL(BD)</th>
+                        <th style="width: 120px; text-align: center; border: 1px solid #cbd5e1;">イラストデータ (.ai)</th>
+                    </tr>
+                </thead>
+                <tbody id="detail-tbody">
+                    <!-- 明細が挿入されます -->
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1;">
+                        <td colspan="5" style="padding: 0.6rem; text-align: right; border: 1px solid #cbd5e1;">合計数量</td>
+                        <td id="foot-s-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-m-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-l-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-xl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-xxl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-s-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-m-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-l-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-xl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-xxl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                        <td id="foot-total" style="text-align: center; color: var(--primary); border: 1px solid #cbd5e1;">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button class="btn btn-secondary" id="close-detail-modal-btn-lower">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div class="toast" id="toast">
+        <span class="toast-icon" id="toast-icon">✓</span>
+        <span class="toast-message" id="toast-message"></span>
+    </div>
+
+    <script src="maker.js"></script>
+</body>
+</html>
