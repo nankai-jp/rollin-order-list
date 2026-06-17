@@ -418,10 +418,18 @@ async function openMakerOrderDetails(orderId) {
             });
             grandTotal += item.qtys.reduce((a, b) => a + b, 0);
 
-            let printFileCell = `<span class="badge badge-warning">未登録</span>`;
-            if (item.has_print_file) {
-                const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body)}&design=${encodeURIComponent(item.design)}&token=${encodeURIComponent(adminState.token)}`;
-                printFileCell = `<a href="${downloadUrl}" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd;">📥 ダウンロード</a>`;
+            let printFileCell = '';
+            if (item.print_files && item.print_files.length > 0) {
+                item.print_files.forEach(file => {
+                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
+                    printFileCell += `
+                        <a href="${downloadUrl}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd;" title="${file}">
+                            📥 ${file}
+                        </a>
+                    `;
+                });
+            } else {
+                printFileCell = `<span class="badge badge-warning">未登録</span>`;
             }
 
             tr.innerHTML = `
@@ -729,37 +737,50 @@ function renderPrintMaster() {
         const name = prod.values[3];
         const body = prod.values[4];
         const design = prod.values[5];
-        const pFile = prod.print_file;
+        const printFiles = prod.print_files || [];
 
-        let statusBadge = `<span class="badge badge-warning">未登録</span>`;
-        let actionButtons = `
-            <button class="btn btn-secondary btn-upload-trigger" data-code="${code}" data-name="${name}" data-body="${body}" data-design="${design}" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">📁 アップロード</button>
-        `;
-
-        if (pFile) {
-            const downloadUrl = `/api/download-print?product_code=${code}&body=${encodeURIComponent(body)}&design=${encodeURIComponent(design)}&token=${encodeURIComponent(adminState.token)}`;
-            statusBadge = `<span class="badge badge-success" title="${pFile}">登録済 (${pFile})</span>`;
-            actionButtons = `
-                <a href="${downloadUrl}" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; background-color:#e0f2fe; color:#0369a1; border-color:#bae6fd;">📥 ダウンロード</a>
-                <button class="btn btn-secondary btn-delete-print" data-code="${code}" data-body="${body}" data-design="${design}" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; color:var(--danger); border-color: rgba(239, 68, 68, 0.2);">🗑️ 削除</button>
-                <button class="btn btn-secondary btn-upload-trigger" data-code="${code}" data-name="${name}" data-body="${body}" data-design="${design}" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">🔄 再アップロード</button>
-            `;
+        let statusBadgeHtml = '';
+        if (printFiles.length > 0) {
+            printFiles.forEach(file => {
+                const downloadUrl = `/api/download-print?product_code=${code}&body=${encodeURIComponent(body)}&design=${encodeURIComponent(design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
+                statusBadgeHtml += `
+                    <div style="margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background-color: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <span class="badge badge-success" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${file}">${file}</span>
+                        <div style="display: flex; gap: 0.25rem;">
+                            <a href="${downloadUrl}" class="btn btn-secondary" style="padding: 0.15rem 0.35rem; font-size: 0.75rem; background-color:#e0f2fe; color:#0369a1; border-color:#bae6fd;">📥</a>
+                            <button class="btn btn-secondary btn-delete-file-specific" data-code="${code}" data-body="${body}" data-design="${design}" data-file="${file}" style="padding: 0.15rem 0.35rem; font-size: 0.75rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.2);">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            statusBadgeHtml = `<span class="badge badge-warning">未登録</span>`;
         }
+
+        let actionButtonsHtml = `
+            <button class="btn btn-secondary btn-upload-trigger" data-code="${code}" data-name="${name}" data-body="${body}" data-design="${design}" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">📁 追加アップロード</button>
+        `;
 
         tr.innerHTML = `
             <td style="font-weight:bold;">${code}</td>
-            <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${name}">${name}</td>
+            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${name}">${name}</td>
             <td>${body}</td>
             <td>${design}</td>
-            <td>${statusBadge}</td>
-            <td style="text-align: center; display: flex; gap: 0.5rem; justify-content: center;">${actionButtons}</td>
+            <td style="min-width: 220px;">${statusBadgeHtml}</td>
+            <td style="text-align: center; vertical-align: middle;">${actionButtonsHtml}</td>
         `;
 
-        // 削除ボタンのバインド
-        const btnDelete = tr.querySelector('.btn-delete-print');
-        if (btnDelete) {
-            btnDelete.addEventListener('click', () => deletePrintFile(code, body, design));
-        }
+        // 個別削除ボタンのバインド
+        tr.querySelectorAll('.btn-delete-file-specific').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                const fileCode = target.getAttribute('data-code');
+                const fileBody = target.getAttribute('data-body');
+                const fileDesign = target.getAttribute('data-design');
+                const fileName = target.getAttribute('data-file');
+                deletePrintFile(fileCode, fileBody, fileDesign, fileName);
+            });
+        });
 
         // アップロードのバインド
         tr.querySelector('.btn-upload-trigger').addEventListener('click', () => {
@@ -820,8 +841,11 @@ hiddenFileInput.addEventListener('change', async (e) => {
     }
 });
 
-async function deletePrintFile(code, body, design) {
-    if (!confirm(`この商品（品番: ${code}）のイラストレータデータを削除しますか？`)) return;
+async function deletePrintFile(code, body, design, filename = "") {
+    const confirmMsg = filename 
+        ? `この商品（品番: ${code}）のファイル「${filename}」を削除しますか？`
+        : `この商品（品番: ${code}）のすべてのイラストレータデータを削除しますか？`;
+    if (!confirm(confirmMsg)) return;
     try {
         const response = await fetch('/api/admin/delete-print', {
             method: 'POST',
@@ -830,7 +854,8 @@ async function deletePrintFile(code, body, design) {
                 token: adminState.token,
                 product_code: code,
                 body: body,
-                design: design
+                design: design,
+                filename: filename
             })
         });
 

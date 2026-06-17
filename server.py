@@ -270,7 +270,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 # 品番と商品名の両方が存在する場合のみ「編集可能・画像フォルダあり」とする
                 is_editable = bool(p_val and n_val)
                 images = []
-                print_file = None
+                print_files = []
                 
                 if is_editable:
                     cleaned_n = clean_folder_name(n_val)
@@ -293,16 +293,14 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         # プリント用フォルダをスキャン
                         print_folder = os.path.join(folder_path, "print")
                         if os.path.exists(print_folder) and os.path.isdir(print_folder):
-                            print_files = os.listdir(print_folder)
-                            if print_files:
-                                print_file = print_files[0]
+                            print_files = [f for f in os.listdir(print_folder) if os.path.isfile(os.path.join(print_folder, f))]
                 
                 data_rows.append({
                     "original_index": i,
                     "is_editable": is_editable,
                     "values": r[:19],  # フロントには19列分（0〜18）だけ送る
                     "images": images,
-                    "print_file": print_file
+                    "print_files": print_files
                 })
                 
             self.send_json({
@@ -627,8 +625,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     body_val = ir[2]
                     design_val = ir[3]
                     
-                    has_print_file = False
-                    print_filename = None
+                    print_files = []
                     
                     prefix = f"{product_code}_"
                     target_parent = None
@@ -643,10 +640,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         subfolder_name = f"{cleaned_b}_{cleaned_d}"
                         print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
                         if os.path.exists(print_folder) and os.path.isdir(print_folder):
-                            files = os.listdir(print_folder)
-                            if files:
-                                has_print_file = True
-                                print_filename = files[0]
+                            print_files = [f for f in os.listdir(print_folder) if os.path.isfile(os.path.join(print_folder, f))]
                                 
                     items.append({
                         "product_code": ir[0],
@@ -654,8 +648,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "body": ir[2],
                         "design": ir[3],
                         "qtys": list(ir[4:14]),
-                        "has_print_file": has_print_file,
-                        "print_filename": print_filename
+                        "print_files": print_files
                     })
                     
                 self.send_json({
@@ -707,6 +700,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             product_code = query_params.get("product_code", [""])[0].strip()
             body = query_params.get("body", [""])[0].strip()
             design = query_params.get("design", [""])[0].strip()
+            filename_param = query_params.get("filename", [""])[0].strip()
             token = query_params.get("token", [""])[0].strip()
             
             ADMIN_PASSWORD = "rollin-admin"
@@ -745,7 +739,15 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": "Print file not found"}, 404)
                 return
                 
-            file_name = files[0]
+            if filename_param:
+                if filename_param in files:
+                    file_name = filename_param
+                else:
+                    self.send_json({"error": "Specified print file not found"}, 404)
+                    return
+            else:
+                file_name = files[0]
+                
             file_path = os.path.join(print_folder, file_name)
             
             self.send_response(200)
@@ -1148,12 +1150,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
                 os.makedirs(print_folder, exist_ok=True)
                 
-                # Delete existing files in print folder
-                for item in os.listdir(print_folder):
-                    item_path = os.path.join(print_folder, item)
-                    if os.path.isfile(item_path):
-                        os.remove(item_path)
-                
+                # We no longer delete existing files, so multiple files can be uploaded!
                 filename = file_data["filename"]
                 filename = os.path.basename(filename)
                 target_file_path = os.path.join(print_folder, filename)
@@ -1176,6 +1173,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 product_code = req_data.get("product_code", "")
                 body = req_data.get("body", "")
                 design = req_data.get("design", "")
+                filename = req_data.get("filename", "")
             except Exception as e:
                 self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
                 return
@@ -1204,10 +1202,15 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
                 
                 if os.path.exists(print_folder) and os.path.isdir(print_folder):
-                    for item in os.listdir(print_folder):
-                        item_path = os.path.join(print_folder, item)
-                        if os.path.isfile(item_path):
-                            os.remove(item_path)
+                    if filename:
+                        file_path = os.path.join(print_folder, filename)
+                        if os.path.exists(file_path) and os.path.isfile(file_path):
+                            os.remove(file_path)
+                    else:
+                        for item in os.listdir(print_folder):
+                            item_path = os.path.join(print_folder, item)
+                            if os.path.isfile(item_path):
+                                os.remove(item_path)
                             
                 self.send_json({"status": "success"})
             except Exception as e:
