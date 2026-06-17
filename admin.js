@@ -60,7 +60,7 @@ function printElement(elementId) {
         printWindow.document.write(el.outerHTML);
     });
     
-    printWindow.document.write(\`
+    printWindow.document.write(`
         <style>
             @media screen {
                 body {
@@ -96,7 +96,7 @@ function printElement(elementId) {
                 display: none !important;
             }
         </style>
-    \`);
+    `);
     
     printWindow.document.write('</head><body>');
     printWindow.document.write(printEl.outerHTML);
