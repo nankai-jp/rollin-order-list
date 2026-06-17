@@ -825,6 +825,27 @@ body {
     border-color: var(--accent);
 }
 
+/* ==========================================================================
+   Responsive Table Container
+   ========================================================================== */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: var(--bg-card);
+}
+.table-responsive .order-table {
+    min-width: 1100px;
+    width: 100% !important;
+}
+.table-responsive .history-table {
+    min-width: 800px;
+    width: 100% !important;
+}
+
 /* 画面表示での印刷専用要素の非表示 */
 .print-only {
     display: none !important;
@@ -842,6 +863,20 @@ body {
         font-size: 11pt !important;
         padding: 0 !important;
         margin: 0 !important;
+    }
+
+    .table-responsive {
+        overflow: visible !important;
+        max-height: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+    }
+    .table-responsive .order-table,
+    .table-responsive .history-table {
+        min-width: 0 !important;
+        width: 100% !important;
     }
 
     .app-header,

@@ -83,6 +83,11 @@
         }
         
         @media print {
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+
             /* Hide all main contents, other modals, and operation elements */
             #login-container,
             #maker-dashboard,
@@ -128,6 +133,53 @@
                 display: block !important;
                 background: #ffffff !important;
             }
+
+            #maker-print-area-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            /* 注文詳細テーブルの印刷調整 */
+            .modal.active .order-table {
+                width: 100% !important;
+                min-width: 0 !important;
+                table-layout: fixed !important;
+                border-collapse: collapse !important;
+                font-size: 8pt !important;
+            }
+            .modal.active .order-table th, 
+            .modal.active .order-table td {
+                position: static !important;
+                width: auto !important;
+                max-width: none !important;
+                white-space: normal !important;
+                word-break: break-all !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                border: 1px solid #cbd5e1 !important;
+                padding: 4px 2px !important;
+            }
+
+            /* 製作業者発注詳細テーブルの印刷列幅指定 (17列用) */
+            #detail-modal .order-table th:nth-child(1),
+            #detail-modal .order-table td:nth-child(1) { width: 3% !important; text-align: center !important; }
+            #detail-modal .order-table th:nth-child(2),
+            #detail-modal .order-table td:nth-child(2) { width: 6% !important; text-align: center !important; }
+            #detail-modal .order-table th:nth-child(3),
+            #detail-modal .order-table td:nth-child(3) { width: 10% !important; }
+            #detail-modal .order-table th:nth-child(4),
+            #detail-modal .order-table td:nth-child(4) { width: 18% !important; }
+            #detail-modal .order-table th:nth-child(5),
+            #detail-modal .order-table td:nth-child(5) { width: 9% !important; }
+            #detail-modal .order-table th:nth-child(6),
+            #detail-modal .order-table td:nth-child(6) { width: 9% !important; }
+            #detail-modal .order-table th:nth-child(7),
+            #detail-modal .order-table td:nth-child(7) { width: 9% !important; }
+            #detail-modal .order-table th:nth-child(n+8):nth-child(-n+17),
+            #detail-modal .order-table td:nth-child(n+8):nth-child(-n+17) { width: 3.6% !important; text-align: center !important; }
         }
     </style>
 </head>
@@ -158,27 +210,29 @@
             <button class="btn btn-secondary" id="refresh-btn">🔄 履歴を更新</button>
         </div>
 
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th style="width: 60px; text-align: center;">画像</th>
-                    <th>発注日時</th>
-                    <th>発注番号</th>
-                    <th>元顧客発注番号</th>
-                    <th style="text-align: right;">総数量</th>
-                    <th>ステータス</th>
-                    <th>プリントデータ</th>
-                    <th style="text-align: center;">操作</th>
-                </tr>
-            </thead>
-            <tbody id="history-tbody">
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                        発注データを読み込んでいます...
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px; text-align: center;">画像</th>
+                        <th>発注日時</th>
+                        <th>発注番号</th>
+                        <th>元顧客発注番号</th>
+                        <th style="text-align: right;">総数量</th>
+                        <th>ステータス</th>
+                        <th>プリントデータ</th>
+                        <th style="text-align: center;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                            発注データを読み込んでいます...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- 詳細モーダル -->
@@ -205,49 +259,51 @@
                     <span id="detail-status-badge" class="badge badge-warning">発注済</span>
                 </div>
 
-                <table class="order-table" style="width: 100% !important; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
-                    <thead>
-                        <tr style="background-color: #f1f5f9;">
-                            <th style="width: 40px; text-align: center; border: 1px solid #cbd5e1;">＃</th>
-                            <th style="width: 60px; text-align: center; border: 1px solid #cbd5e1;">画像</th>
-                            <th style="width: 90px; border: 1px solid #cbd5e1;">品番</th>
-                            <th style="border: 1px solid #cbd5e1;">商品名</th>
-                            <th style="width: 80px; border: 1px solid #cbd5e1;">ボディカラー</th>
-                            <th style="width: 80px; border: 1px solid #cbd5e1;">ボディ品番</th>
-                            <th style="width: 80px; border: 1px solid #cbd5e1;">デザイン</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S(BD)</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M(BD)</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L(BD)</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL(BD)</th>
-                            <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL(BD)</th>
-                            <th style="width: 120px; text-align: center; border: 1px solid #cbd5e1;" class="hide-on-print">イラストデータ (.ai)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="detail-tbody">
-                        <!-- 明細が挿入されます -->
-                    </tbody>
-                    <tfoot>
-                        <tr style="background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1;">
-                            <td colspan="7" style="padding: 0.6rem; text-align: right; border: 1px solid #cbd5e1;">合計数量</td>
-                            <td id="foot-s-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-m-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-l-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-xl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-xxl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-s-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-m-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-l-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-xl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-xxl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
-                            <td id="foot-total" style="text-align: center; color: var(--primary); border: 1px solid #cbd5e1;">0</td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="table-responsive">
+                    <table class="order-table" style="border-collapse: collapse; font-size: 0.9rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                        <thead>
+                            <tr style="background-color: #f1f5f9;">
+                                <th style="width: 40px; text-align: center; border: 1px solid #cbd5e1;">＃</th>
+                                <th style="width: 60px; text-align: center; border: 1px solid #cbd5e1;">画像</th>
+                                <th style="width: 90px; border: 1px solid #cbd5e1;">品番</th>
+                                <th style="border: 1px solid #cbd5e1;">商品名</th>
+                                <th style="width: 80px; border: 1px solid #cbd5e1;">ボディカラー</th>
+                                <th style="width: 80px; border: 1px solid #cbd5e1;">ボディ品番</th>
+                                <th style="width: 80px; border: 1px solid #cbd5e1;">デザイン</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S(BD)</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">M(BD)</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">L(BD)</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XL(BD)</th>
+                                <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">XXL(BD)</th>
+                                <th style="width: 120px; text-align: center; border: 1px solid #cbd5e1;" class="hide-on-print">イラストデータ (.ai)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-tbody">
+                            <!-- 明細が挿入されます -->
+                        </tbody>
+                        <tfoot>
+                            <tr style="background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1;">
+                                <td colspan="7" style="padding: 0.6rem; text-align: right; border: 1px solid #cbd5e1;">合計数量</td>
+                                <td id="foot-s-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-m-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-l-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-xl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-xxl-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-s-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-m-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-l-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-xl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-xxl-bd" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
+                                <td id="foot-total" style="text-align: center; color: var(--primary); border: 1px solid #cbd5e1;">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;" class="modal-footer">

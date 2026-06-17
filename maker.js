@@ -4,6 +4,36 @@ let makerState = {
     orders: []
 };
 
+// プリント用ファイルの安全ダウンロード関数（ダウンロードエラー時の画面遷移バグ防止）
+window.downloadPrintFile = async function(url, filename) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            let errorMsg = "ファイルが見つかりません。";
+            try {
+                const errData = await response.json();
+                if (errData && errData.error) {
+                    errorMsg = errData.error;
+                }
+            } catch (e) {}
+            alert(`ダウンロードに失敗しました: ${errorMsg}`);
+            return;
+        }
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+        console.error("Download print file error:", err);
+        alert("ダウンロード処理中に通信エラーが発生しました。");
+    }
+};
+
 // DOM要素のキャッシュ
 const elements = {
     loginContainer: document.getElementById('login-container'),
@@ -178,7 +208,7 @@ function renderOrders() {
         if (order.print_files && order.print_files.length > 0) {
             order.print_files.forEach(file => {
                 printHtml += `
-                    <a href="${file.download_url}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin: 2px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; text-decoration: none; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${file.filename}">
+                    <a href="javascript:void(0)" onclick="downloadPrintFile('${file.download_url.replace(/'/g, "\\'")}', '${file.filename.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin: 2px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; text-decoration: none; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${file.filename}">
                         📥 ${file.filename}
                     </a>
                 `;
@@ -246,7 +276,7 @@ async function openOrderDetails(orderId) {
                 item.print_files.forEach(file => {
                     const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body_color || item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(makerState.token)}`;
                     printFileCell += `
-                        <a href="${downloadUrl}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; text-decoration: none;" title="${file}">
+                        <a href="javascript:void(0)" onclick="downloadPrintFile('${downloadUrl.replace(/'/g, "\\'")}', '${file.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; text-decoration: none;" title="${file}">
                             📥 ${file}
                         </a>
                     `;
