@@ -733,6 +733,28 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": str(e)}, 500)
             return
 
+        elif path == '/api/admin/maker-bodies':
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            token = query_params.get("token", [""])[0].strip()
+            
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("SELECT DISTINCT body FROM maker_order_items WHERE body IS NOT NULL AND body != ''")
+                rows = cursor.fetchall()
+                conn.close()
+                
+                db_bodies = [r[0] for r in rows]
+                self.send_json({"bodies": db_bodies})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
         elif path == '/api/download-print':
             query_params = urllib.parse.parse_qs(parsed_url.query)
             product_code = query_params.get("product_code", [""])[0].strip()
@@ -970,7 +992,6 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"status": "success", "token": MAKER_PASSWORD})
             else:
                 self.send_json({"error": "パスワードが正しくありません。"}, 401)
-            return
 
         elif path == '/api/admin/maker-orders/create':
             content_length = int(self.headers['Content-Length'])
@@ -1040,7 +1061,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         maker_order_id, product_code, product_name, body, design,
                         qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
                         qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (maker_order_id,) + db_item)
                     
                 conn.commit()

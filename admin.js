@@ -654,7 +654,7 @@ function renderMakerCreateList() {
             <td style="font-weight:bold;">${item.product_code}</td>
             <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
             <td style="padding: 4px;">
-                <input type="text" class="body-input-field" value="${item.body}" data-index="${index}" 
+                <input type="text" class="body-input-field" list="maker-bodies-list" value="${item.body}" data-index="${index}" 
                        style="width: 100px; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.85rem;">
             </td>
             <td>${item.design}</td>
@@ -729,6 +729,7 @@ elements.btnMakerCreateSubmit.addEventListener('click', async () => {
         elements.makerCreateModal.classList.remove('active');
         // 製作業者発注タブを有効にする
         elements.tabButtons[1].click();
+        loadMakerBodies(); // ボディリストの更新
     } catch (error) {
         console.error("submit maker order error:", error);
         showToast(error.message, "error");
@@ -751,10 +752,50 @@ async function loadPrintMaster() {
         // valuesが存在する編集可能行だけをマスタとしてキャッシュ
         masterProducts = data.rows.filter(r => r.is_editable);
         renderPrintMaster();
+        loadMakerBodies(); // ボディリストの初期ロード
     } catch (error) {
         console.error("loadPrintMaster error:", error);
         showToast(error.message, "error");
     }
+}
+
+async function loadMakerBodies() {
+    let datalist = document.getElementById('maker-bodies-list');
+    if (!datalist) {
+        datalist = document.createElement('datalist');
+        datalist.id = 'maker-bodies-list';
+        document.body.appendChild(datalist);
+    }
+    
+    const csvBodies = new Set();
+    masterProducts.forEach(prod => {
+        const body = prod.values[4];
+        if (body) csvBodies.add(body.trim());
+    });
+    
+    const pastBodies = [];
+    try {
+        const response = await fetch(`/api/admin/maker-bodies?token=${encodeURIComponent(adminState.token)}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.bodies) {
+                data.bodies.forEach(b => {
+                    if (b) pastBodies.push(b.trim());
+                });
+            }
+        }
+    } catch (e) {
+        console.error("loadMakerBodies error:", e);
+    }
+    
+    const allBodies = new Set([...csvBodies, ...pastBodies]);
+    
+    datalist.innerHTML = '';
+    allBodies.forEach(body => {
+        const option = document.createElement('option');
+        option.value = body;
+        datalist.appendChild(option);
+    });
 }
 
 function renderPrintMaster() {
