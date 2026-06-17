@@ -143,7 +143,7 @@ def clean_folder_name(name):
         name = name.replace(char, replacement)
     return name.strip().strip('.')
 
-def get_original_body_color(product_code):
+def get_original_body_color(product_code, preferred_body=None):
     if not product_code or not os.path.exists(CSV_FILENAME):
         return ""
     try:
@@ -156,9 +156,20 @@ def get_original_body_color(product_code):
                 b_idx = 4
                 if "ボディ" in header:
                     b_idx = header.index("ボディ")
+                
+                matched_colors = []
                 for r in rows[6:]:
                     if len(r) > max(p_idx, b_idx) and r[p_idx].strip() == product_code:
-                        return r[b_idx].strip()
+                        color = r[b_idx].strip()
+                        if color:
+                            matched_colors.append(color)
+                
+                if not matched_colors:
+                    return ""
+                
+                if preferred_body and preferred_body in matched_colors:
+                    return preferred_body
+                return matched_colors[0]
     except Exception as e:
         print(f"Error reading CSV for body color lookup: {e}")
     return ""
@@ -680,7 +691,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                     break
                                     
                         if target_parent:
-                            original_body = body_color or get_original_body_color(product_code) or body_val
+                            original_body = body_color or get_original_body_color(product_code, body_val) or body_val
                             cleaned_b = clean_folder_name(original_body)
                             cleaned_d = clean_folder_name(design_val)
                             subfolder_name = f"{cleaned_b}_{cleaned_d}"
@@ -824,7 +835,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                 break
                                 
                     if target_parent:
-                        original_body = body_color or get_original_body_color(product_code) or body_val
+                        original_body = body_color or get_original_body_color(product_code, body_val) or body_val
                         cleaned_b = clean_folder_name(original_body)
                         cleaned_d = clean_folder_name(design_val)
                         subfolder_name = f"{cleaned_b}_{cleaned_d}"
@@ -923,7 +934,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                     break
                                     
                         if target_parent:
-                            original_body = body_color or get_original_body_color(product_code) or body_val
+                            original_body = body_color or get_original_body_color(product_code, body_val) or body_val
                             cleaned_b = clean_folder_name(original_body)
                             cleaned_d = clean_folder_name(design_val)
                             subfolder_name = f"{cleaned_b}_{cleaned_d}"
@@ -1057,7 +1068,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": "Product folder not found"}, 404)
                 return
                 
-            original_body = get_original_body_color(product_code) or body
+            original_body = get_original_body_color(product_code, body) or body
             cleaned_b = clean_folder_name(original_body)
             cleaned_d = clean_folder_name(design)
             subfolder_name = f"{cleaned_b}_{cleaned_d}"
