@@ -188,20 +188,29 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             
         # 画像ファイルの配信 (/images/品番_商品名/画像名)
         elif path.startswith('/images/'):
-            # デコードしてセキュリティチェック
             relative_path = urllib.parse.unquote(path[8:])  # '/images/' の後を取得
-            # ディレクトリトラバーサル防止
-            safe_path = os.path.normpath(os.path.join(BASE_FOLDER_NAME, relative_path))
             
-            # 安全確認: BASE_FOLDER_NAME の配下に収まっているか
+            # まず永続ディスク側でパスを検証・取得
+            safe_path = os.path.normpath(os.path.join(BASE_FOLDER_NAME, relative_path))
             abs_base = os.path.abspath(BASE_FOLDER_NAME)
             abs_target = os.path.abspath(safe_path)
-            if not abs_target.startswith(abs_base):
-                self.send_error(403, "Access Denied")
-                return
+            
+            if os.path.exists(safe_path) and os.path.isfile(safe_path) and abs_target.startswith(abs_base):
+                target_file = safe_path
+            else:
+                # 無ければローカルのリポジトリ側を探す
+                local_base = "注文リスト管理"
+                safe_path_local = os.path.normpath(os.path.join(local_base, relative_path))
+                abs_base_local = os.path.abspath(local_base)
+                abs_target_local = os.path.abspath(safe_path_local)
+                if os.path.exists(safe_path_local) and os.path.isfile(safe_path_local) and abs_target_local.startswith(abs_base_local):
+                    target_file = safe_path_local
+                else:
+                    self.send_error(404, "Image not found")
+                    return
                 
             # Content-Typeの決定
-            ext = os.path.splitext(safe_path)[1].lower()
+            ext = os.path.splitext(target_file)[1].lower()
             mime_types = {
                 '.png': 'image/png',
                 '.jpg': 'image/jpeg',
@@ -210,7 +219,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 '.webp': 'image/webp'
             }
             content_type = mime_types.get(ext, 'application/octet-stream')
-            self.send_file(safe_path, content_type)
+            self.send_file(target_file, content_type)
             return
             
         # CSVデータ取得 API
@@ -287,21 +296,31 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     
                     folder_name = f"{p_val}_{cleaned_n}"
                     subfolder_name = f"{cleaned_b}_{cleaned_d}"
-                    folder_path = os.path.join(BASE_FOLDER_NAME, folder_name, subfolder_name)
                     
-                    if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                        # 画像ファイルをスキャン
-                        valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
-                        for item in sorted(os.listdir(folder_path), key=natural_sort_key):
-                            item_ext = os.path.splitext(item)[1].lower()
-                            if item_ext in valid_exts:
-                                # ブラウザからアクセス可能な画像URLを構築
-                                images.append(f"/images/{folder_name}/{subfolder_name}/{item}")
+                    path_persistent = os.path.join(BASE_FOLDER_NAME, folder_name, subfolder_name)
+                    path_local = os.path.join("注文リスト管理", folder_name, subfolder_name)
+                    
+                    valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+                    
+                    # 永続ディスクとローカルの両方から画像をスキャン
+                    scanned_images = set()
+                    for folder_path in [path_persistent, path_local]:
+                        if os.path.exists(folder_path) and os.path.isdir(folder_path):
+                            for item in sorted(os.listdir(folder_path), key=natural_sort_key):
+                                item_ext = os.path.splitext(item)[1].lower()
+                                if item_ext in valid_exts:
+                                    scanned_images.add(f"/images/{folder_name}/{subfolder_name}/{item}")
+                    images = sorted(list(scanned_images), key=natural_sort_key)
                                 
-                        # プリント用フォルダをスキャン
+                    # プリントフォルダも両方から取得
+                    scanned_prints = set()
+                    for folder_path in [path_persistent, path_local]:
                         print_folder = os.path.join(folder_path, "print")
                         if os.path.exists(print_folder) and os.path.isdir(print_folder):
-                            print_files = [f for f in os.listdir(print_folder) if os.path.isfile(os.path.join(print_folder, f))]
+                            for f in os.listdir(print_folder):
+                                if os.path.isfile(os.path.join(print_folder, f)):
+                                    scanned_prints.add(f)
+                    print_files = sorted(list(scanned_prints))
                 
                 data_rows.append({
                     "original_index": i,
@@ -413,22 +432,32 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     images = []
                     prefix = f"{product_code}_"
                     target_parent = None
-                    if os.path.exists(BASE_FOLDER_NAME):
-                        for item in os.listdir(BASE_FOLDER_NAME):
-                            if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
-                                target_parent = item
+                    # 永続ディスクかローカルのいずれかで prefix が合致する親フォルダ名を探す
+                    for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                        if os.path.exists(base_dir):
+                            for item in os.listdir(base_dir):
+                                if item.startswith(prefix) and os.path.isdir(os.path.join(base_dir, item)):
+                                    target_parent = item
+                                    break
+                            if target_parent:
                                 break
+                                
                     if target_parent:
                         cleaned_b = clean_folder_name(body_val)
                         cleaned_d = clean_folder_name(design_val)
                         subfolder_name = f"{cleaned_b}_{cleaned_d}"
-                        folder_path = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name)
-                        if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                            valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
-                            for item in sorted(os.listdir(folder_path), key=natural_sort_key):
-                                item_ext = os.path.splitext(item)[1].lower()
-                                if item_ext in valid_exts:
-                                    images.append(f"/images/{target_parent}/{subfolder_name}/{item}")
+                        
+                        # 永続ディスクとローカルの両方から画像をスキャン
+                        scanned_images = set()
+                        valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+                        for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                            folder_path = os.path.join(base_dir, target_parent, subfolder_name)
+                            if os.path.exists(folder_path) and os.path.isdir(folder_path):
+                                for item in sorted(os.listdir(folder_path), key=natural_sort_key):
+                                    item_ext = os.path.splitext(item)[1].lower()
+                                    if item_ext in valid_exts:
+                                        scanned_images.add(f"/images/{target_parent}/{subfolder_name}/{item}")
+                        images = sorted(list(scanned_images), key=natural_sort_key)
                     
                     items.append({
                         "product_code": product_code,
@@ -663,29 +692,41 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     
                     prefix = f"{product_code}_"
                     target_parent = None
-                    if os.path.exists(BASE_FOLDER_NAME):
-                        for item in os.listdir(BASE_FOLDER_NAME):
-                            if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
-                                target_parent = item
+                    for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                        if os.path.exists(base_dir):
+                            for item in os.listdir(base_dir):
+                                if item.startswith(prefix) and os.path.isdir(os.path.join(base_dir, item)):
+                                    target_parent = item
+                                    break
+                            if target_parent:
                                 break
+                                
                     if target_parent:
                         cleaned_b = clean_folder_name(body_val)
                         cleaned_d = clean_folder_name(design_val)
                         subfolder_name = f"{cleaned_b}_{cleaned_d}"
                         
-                        # Scan images
-                        folder_path = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name)
-                        if os.path.exists(folder_path) and os.path.isdir(folder_path):
-                            valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
-                            for item in sorted(os.listdir(folder_path), key=natural_sort_key):
-                                item_ext = os.path.splitext(item)[1].lower()
-                                if item_ext in valid_exts:
-                                    images.append(f"/images/{target_parent}/{subfolder_name}/{item}")
+                        # Scan images from both directories
+                        scanned_images = set()
+                        valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+                        for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                            folder_path = os.path.join(base_dir, target_parent, subfolder_name)
+                            if os.path.exists(folder_path) and os.path.isdir(folder_path):
+                                for item in sorted(os.listdir(folder_path), key=natural_sort_key):
+                                    item_ext = os.path.splitext(item)[1].lower()
+                                    if item_ext in valid_exts:
+                                        scanned_images.add(f"/images/{target_parent}/{subfolder_name}/{item}")
+                        images = sorted(list(scanned_images), key=natural_sort_key)
                                     
-                        # Scan print files
-                        print_folder = os.path.join(folder_path, "print")
-                        if os.path.exists(print_folder) and os.path.isdir(print_folder):
-                            print_files = [f for f in os.listdir(print_folder) if os.path.isfile(os.path.join(print_folder, f))]
+                        # Scan print files from both directories
+                        scanned_prints = set()
+                        for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                            print_folder = os.path.join(base_dir, target_parent, subfolder_name, "print")
+                            if os.path.exists(print_folder) and os.path.isdir(print_folder):
+                                for f in os.listdir(print_folder):
+                                    if os.path.isfile(os.path.join(print_folder, f)):
+                                        scanned_prints.add(f)
+                        print_files = sorted(list(scanned_prints))
                                 
                     items.append({
                         "product_code": ir[0],
@@ -806,10 +847,17 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
             target_parent = None
             prefix = f"{product_code}_"
-            if os.path.exists(BASE_FOLDER_NAME):
-                for item in os.listdir(BASE_FOLDER_NAME):
-                    if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
-                        target_parent = item
+            target_parent = None
+            used_base_dir = None
+            
+            for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                if os.path.exists(base_dir):
+                    for item in os.listdir(base_dir):
+                        if item.startswith(prefix) and os.path.isdir(os.path.join(base_dir, item)):
+                            target_parent = item
+                            used_base_dir = base_dir
+                            break
+                    if target_parent:
                         break
             
             if not target_parent:
@@ -819,7 +867,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             cleaned_b = clean_folder_name(body)
             cleaned_d = clean_folder_name(design)
             subfolder_name = f"{cleaned_b}_{cleaned_d}"
-            print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
+            print_folder = os.path.join(used_base_dir, target_parent, subfolder_name, "print")
             
             if not os.path.exists(print_folder) or not os.path.isdir(print_folder):
                 self.send_json({"error": "Print folder not found"}, 404)
