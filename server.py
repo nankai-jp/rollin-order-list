@@ -109,6 +109,15 @@ def init_db():
         )
         """)
         conn.commit()
+        
+        # Ensure body_color column exists in maker_order_items
+        try:
+            cursor.execute("ALTER TABLE maker_order_items ADD COLUMN body_color TEXT DEFAULT ''")
+            conn.commit()
+        except sqlite3.OperationalError:
+            # Column already exists
+            pass
+            
         conn.close()
         print("Database initialization successful.")
     except Exception as e:
@@ -644,7 +653,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     
                     # Fetch items for this order to find images and print files
                     cursor.execute("""
-                    SELECT product_code, product_name, body, design
+                    SELECT product_code, product_name, body, body_color, design
                     FROM maker_order_items
                     WHERE maker_order_id = ?
                     """, (order_id,))
@@ -656,7 +665,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     for ir in item_rows:
                         product_code = ir[0]
                         body_val = ir[2]
-                        design_val = ir[3]
+                        body_color = ir[3]
+                        design_val = ir[4]
                         
                         prefix = f"{product_code}_"
                         target_parent = None
@@ -670,7 +680,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                     break
                                     
                         if target_parent:
-                            original_body = get_original_body_color(product_code) or body_val
+                            original_body = body_color or get_original_body_color(product_code) or body_val
                             cleaned_b = clean_folder_name(original_body)
                             cleaned_d = clean_folder_name(design_val)
                             subfolder_name = f"{cleaned_b}_{cleaned_d}"
@@ -761,7 +771,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 }
                 
                 cursor.execute("""
-                SELECT product_code, product_name, body, design,
+                SELECT product_code, product_name, body, body_color, design,
                        qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
                        qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
                 FROM maker_order_items
@@ -775,7 +785,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     product_code = ir[0]
                     product_name = ir[1]
                     body_val = ir[2]
-                    design_val = ir[3]
+                    body_color = ir[3]
+                    design_val = ir[4]
                     
                     # Fill missing product name from CSV if empty
                     if not product_name:
@@ -813,7 +824,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                 break
                                 
                     if target_parent:
-                        original_body = get_original_body_color(product_code) or body_val
+                        original_body = body_color or get_original_body_color(product_code) or body_val
                         cleaned_b = clean_folder_name(original_body)
                         cleaned_d = clean_folder_name(design_val)
                         subfolder_name = f"{cleaned_b}_{cleaned_d}"
@@ -844,8 +855,9 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "product_code": product_code,
                         "product_name": product_name,
                         "body": body_val,
+                        "body_color": body_color,
                         "design": design_val,
-                        "qtys": list(ir[4:14]),
+                        "qtys": list(ir[5:15]),
                         "print_files": print_files,
                         "images": images
                     })
@@ -884,7 +896,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     
                     # Fetch items for this order to find images and print files
                     cursor.execute("""
-                    SELECT product_code, product_name, body, design
+                    SELECT product_code, product_name, body, body_color, design
                     FROM maker_order_items
                     WHERE maker_order_id = ?
                     """, (order_id,))
@@ -896,7 +908,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     for ir in item_rows:
                         product_code = ir[0]
                         body_val = ir[2]
-                        design_val = ir[3]
+                        body_color = ir[3]
+                        design_val = ir[4]
                         
                         prefix = f"{product_code}_"
                         target_parent = None
@@ -910,7 +923,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                                     break
                                     
                         if target_parent:
-                            original_body = get_original_body_color(product_code) or body_val
+                            original_body = body_color or get_original_body_color(product_code) or body_val
                             cleaned_b = clean_folder_name(original_body)
                             cleaned_d = clean_folder_name(design_val)
                             subfolder_name = f"{cleaned_b}_{cleaned_d}"
@@ -1290,7 +1303,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 for item in items:
                     code = item.get("product_code")
                     name = item.get("product_name")
-                    body = item.get("body")
+                    body = item.get("body", "")
+                    body_color = item.get("body_color", "")
                     design = item.get("design")
                     qtys = item.get("qtys", [0]*10)
                     
@@ -1298,7 +1312,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     total_qty += item_qty
                     
                     db_items.append((
-                        code, name, body, design,
+                        code, name, body, body_color, design,
                         qtys[0], qtys[1], qtys[2], qtys[3], qtys[4],
                         qtys[5], qtys[6], qtys[7], qtys[8], qtys[9]
                     ))
@@ -1315,10 +1329,10 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 for db_item in db_items:
                     cursor.execute("""
                     INSERT INTO maker_order_items (
-                        maker_order_id, product_code, product_name, body, design,
+                        maker_order_id, product_code, product_name, body, body_color, design,
                         qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
                         qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (maker_order_id,) + db_item)
                     
                 conn.commit()

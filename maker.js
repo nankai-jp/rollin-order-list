@@ -244,7 +244,7 @@ async function openOrderDetails(orderId) {
             let printFileCell = '';
             if (item.print_files && item.print_files.length > 0) {
                 item.print_files.forEach(file => {
-                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(makerState.token)}`;
+                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body_color || item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(makerState.token)}`;
                     printFileCell += `
                         <a href="${downloadUrl}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; text-decoration: none;" title="${file}">
                             📥 ${file}
@@ -272,7 +272,8 @@ async function openOrderDetails(orderId) {
                 <td style="border: 1px solid #cbd5e1; text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td style="border: 1px solid #cbd5e1; font-weight:bold;" title="${item.product_code}">${item.product_code}</td>
                 <td style="border: 1px solid #cbd5e1; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
-                <td style="border: 1px solid #cbd5e1;" title="${item.body}">${item.body}</td>
+                <td style="border: 1px solid #cbd5e1;" title="${item.body_color || ''}">${item.body_color || ''}</td>
+                <td style="border: 1px solid #cbd5e1;" title="${item.body || ''}">${item.body || ''}</td>
                 <td style="border: 1px solid #cbd5e1;" title="${item.design}">${item.design}</td>
                 ${sizeCellsHtml}
                 <td style="border: 1px solid #cbd5e1; text-align: center;" class="hide-on-print">${printFileCell}</td>

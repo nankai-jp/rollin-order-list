@@ -83,34 +83,50 @@
         }
         
         @media print {
-            body * {
-                visibility: hidden;
+            /* Hide all main contents, other modals, and operation elements */
+            #login-container,
+            #maker-dashboard,
+            .modal:not(.active),
+            .modal-footer,
+            .close-btn,
+            .hide-on-print {
+                display: none !important;
             }
-            body.print-mode-maker #maker-print-area-wrapper, 
-            body.print-mode-maker #maker-print-area-wrapper * {
-                visibility: visible;
-            }
-            body.print-mode-maker #maker-print-area-wrapper {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            .modal {
-                position: absolute !important;
-                background-color: #ffffff !important;
+            
+            /* Reset body styles for printing */
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
                 padding: 0 !important;
-                overflow: visible !important;
             }
-            .detail-modal-content {
+            
+            /* Make active modal fill the page and remove overlays */
+            .modal.active {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                background: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            
+            .modal.active .modal-content,
+            .modal.active .detail-modal-content {
                 border: none !important;
                 box-shadow: none !important;
                 padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 max-height: none !important;
                 overflow: visible !important;
-            }
-            .modal-footer, .close-btn, .hide-on-print {
-                display: none !important;
+                display: block !important;
+                background: #ffffff !important;
             }
         }
     </style>
@@ -196,6 +212,7 @@
                             <th style="width: 60px; text-align: center; border: 1px solid #cbd5e1;">画像</th>
                             <th style="width: 90px; border: 1px solid #cbd5e1;">品番</th>
                             <th style="border: 1px solid #cbd5e1;">商品名</th>
+                            <th style="width: 80px; border: 1px solid #cbd5e1;">ボディカラー</th>
                             <th style="width: 80px; border: 1px solid #cbd5e1;">ボディ品番</th>
                             <th style="width: 80px; border: 1px solid #cbd5e1;">デザイン</th>
                             <th style="width: 45px; text-align: center; border: 1px solid #cbd5e1;">S</th>
@@ -216,7 +233,7 @@
                     </tbody>
                     <tfoot>
                         <tr style="background-color: #f8fafc; font-weight: bold; border: 1px solid #cbd5e1;">
-                            <td colspan="6" style="padding: 0.6rem; text-align: right; border: 1px solid #cbd5e1;">合計数量</td>
+                            <td colspan="7" style="padding: 0.6rem; text-align: right; border: 1px solid #cbd5e1;">合計数量</td>
                             <td id="foot-s-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
                             <td id="foot-m-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>
                             <td id="foot-l-std" style="text-align: center; border: 1px solid #cbd5e1;">0</td>

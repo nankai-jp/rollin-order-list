@@ -506,7 +506,7 @@ async function openMakerOrderDetails(orderId) {
             let printFileCell = '';
             if (item.print_files && item.print_files.length > 0) {
                 item.print_files.forEach(file => {
-                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
+                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body_color || item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
                     printFileCell += `
                         <a href="${downloadUrl}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd;" title="${file}">
                             📥 ${file}
@@ -534,7 +534,8 @@ async function openMakerOrderDetails(orderId) {
                 <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td title="${item.product_code}">${item.product_code}</td>
                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
-                <td title="${item.body}">${item.body}</td>
+                <td title="${item.body_color || ''}">${item.body_color || ''}</td>
+                <td title="${item.body || ''}">${item.body || ''}</td>
                 <td title="${item.design}">${item.design}</td>
                 ${sizeCellsHtml}
                 <td style="text-align: center;" class="hide-on-print">${printFileCell}</td>
@@ -618,7 +619,8 @@ elements.btnForwardToMaker.addEventListener('click', () => {
     makerCreateState.items = items.map(item => ({
         product_code: item.product_code,
         product_name: item.product_name,
-        body: item.body,
+        body_color: item.body, // In customer orders, item.body is the body color!
+        body: "", // Clear body model so user can input it!
         design: item.design,
         qtys: [...item.qtys],
         images: item.images || []
@@ -672,7 +674,8 @@ elements.btnMakerCreateAddRow.addEventListener('click', () => {
     makerCreateState.items.push({
         product_code: code,
         product_name: prod.values[3],
-        body: body,
+        body_color: body, // In CSV, body is the body color!
+        body: "", // Clear body model so user can input it!
         design: design,
         qtys: Array(10).fill(0),
         images: prod.images || []
@@ -725,9 +728,10 @@ function renderMakerCreateList() {
             <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td style="font-weight:bold;">${item.product_code}</td>
             <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
+            <td>${item.body_color || ''}</td>
             <td style="padding: 4px;">
                 <input type="text" class="body-input-field" list="maker-bodies-list" value="${item.body}" data-index="${index}" 
-                       style="width: 100px; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.85rem;">
+                       style="width: 100px; padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.85rem;" placeholder="品番を入力">
             </td>
             <td>${item.design}</td>
             ${sizeInputsHtml}
