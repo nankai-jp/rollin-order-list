@@ -397,14 +397,40 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
                 items = []
                 for ir in item_rows:
+                    product_code = ir[0]
+                    product_name = ir[1]
+                    body_val = ir[2]
+                    design_val = ir[3]
+                    
+                    images = []
+                    prefix = f"{product_code}_"
+                    target_parent = None
+                    if os.path.exists(BASE_FOLDER_NAME):
+                        for item in os.listdir(BASE_FOLDER_NAME):
+                            if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
+                                target_parent = item
+                                break
+                    if target_parent:
+                        cleaned_b = clean_folder_name(body_val)
+                        cleaned_d = clean_folder_name(design_val)
+                        subfolder_name = f"{cleaned_b}_{cleaned_d}"
+                        folder_path = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name)
+                        if os.path.exists(folder_path) and os.path.isdir(folder_path):
+                            valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+                            for item in sorted(os.listdir(folder_path), key=natural_sort_key):
+                                item_ext = os.path.splitext(item)[1].lower()
+                                if item_ext in valid_exts:
+                                    images.append(f"/images/{target_parent}/{subfolder_name}/{item}")
+                    
                     items.append({
-                        "product_code": ir[0],
-                        "product_name": ir[1],
-                        "body": ir[2],
-                        "design": ir[3],
+                        "product_code": product_code,
+                        "product_name": product_name,
+                        "body": body_val,
+                        "design": design_val,
                         "wholesale_price": ir[4],
                         "qtys": list(ir[5:15]),
-                        "subtotal_amount": ir[15]
+                        "subtotal_amount": ir[15],
+                        "images": images
                     })
                     
                 self.send_json({
@@ -625,7 +651,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     body_val = ir[2]
                     design_val = ir[3]
                     
-                    print_files = []
+                    images = []
                     
                     prefix = f"{product_code}_"
                     target_parent = None
@@ -638,7 +664,18 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         cleaned_b = clean_folder_name(body_val)
                         cleaned_d = clean_folder_name(design_val)
                         subfolder_name = f"{cleaned_b}_{cleaned_d}"
-                        print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
+                        
+                        # Scan images
+                        folder_path = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name)
+                        if os.path.exists(folder_path) and os.path.isdir(folder_path):
+                            valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+                            for item in sorted(os.listdir(folder_path), key=natural_sort_key):
+                                item_ext = os.path.splitext(item)[1].lower()
+                                if item_ext in valid_exts:
+                                    images.append(f"/images/{target_parent}/{subfolder_name}/{item}")
+                                    
+                        # Scan print files
+                        print_folder = os.path.join(folder_path, "print")
                         if os.path.exists(print_folder) and os.path.isdir(print_folder):
                             print_files = [f for f in os.listdir(print_folder) if os.path.isfile(os.path.join(print_folder, f))]
                                 
@@ -648,7 +685,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "body": ir[2],
                         "design": ir[3],
                         "qtys": list(ir[4:14]),
-                        "print_files": print_files
+                        "print_files": print_files,
+                        "images": images
                     })
                     
                 self.send_json({

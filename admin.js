@@ -262,8 +262,17 @@ async function openOrderDetails(orderId) {
                 sizeCellsHtml += `<td style="border: 1px solid #000; padding: 6px 4px; text-align: center; font-weight: ${qty > 0 ? 'bold' : 'normal'};">${qty > 0 ? qty : '-'}</td>`;
             });
             
+            const images = item.images || [];
+            let imgHtml = '';
+            if (images.length > 0) {
+                imgHtml = `<img src="${images[0]}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+            } else {
+                imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
+            }
+
             tr.innerHTML = `
                 <td style="border: 1px solid #000; padding: 6px 4px; text-align: center;">${index + 1}</td>
+                <td style="border: 1px solid #000; padding: 6px 4px; text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px;">${item.product_code}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.product_name}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px;">${item.body}</td>
@@ -432,8 +441,17 @@ async function openMakerOrderDetails(orderId) {
                 printFileCell = `<span class="badge badge-warning">未登録</span>`;
             }
 
+            const images = item.images || [];
+            let imgHtml = '';
+            if (images.length > 0) {
+                imgHtml = `<img src="${images[0]}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+            } else {
+                imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
+            }
+
             tr.innerHTML = `
                 <td style="text-align: center;">${index + 1}</td>
+                <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td>${item.product_code}</td>
                 <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
                 <td>${item.body}</td>
@@ -522,7 +540,8 @@ elements.btnForwardToMaker.addEventListener('click', () => {
         product_name: item.product_name,
         body: item.body,
         design: item.design,
-        qtys: [...item.qtys]
+        qtys: [...item.qtys],
+        images: item.images || []
     }));
 
     elements.makerCreateSourceInfo.innerHTML = `元顧客発注連動: <strong>${order.order_number}</strong> (${order.company_name})`;
@@ -581,7 +600,8 @@ elements.btnMakerCreateAddRow.addEventListener('click', () => {
         product_name: prod.values[3],
         body: body,
         design: design,
-        qtys: Array(10).fill(0)
+        qtys: Array(10).fill(0),
+        images: prod.images || []
     });
 
     renderMakerCreateList();
@@ -614,8 +634,17 @@ function renderMakerCreateList() {
                 </td>`;
         });
 
+        const images = item.images || [];
+        let imgHtml = '';
+        if (images.length > 0) {
+            imgHtml = `<img src="${images[0]}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+        } else {
+            imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
+        }
+
         tr.innerHTML = `
             <td style="text-align: center;">${index + 1}</td>
+            <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td style="font-weight:bold;">${item.product_code}</td>
             <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
             <td>${item.body}</td>
@@ -723,7 +752,7 @@ function renderPrintMaster() {
     if (filtered.length === 0) {
         elements.printMasterTbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                     該当する商品はありません。
                 </td>
             </tr>
@@ -738,6 +767,14 @@ function renderPrintMaster() {
         const body = prod.values[4];
         const design = prod.values[5];
         const printFiles = prod.print_files || [];
+        const images = prod.images || [];
+
+        let imgHtml = '';
+        if (images.length > 0) {
+            imgHtml = `<img src="${images[0]}" alt="${name}" class="col-thumb-img" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+        } else {
+            imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
+        }
 
         let statusBadgeHtml = '';
         if (printFiles.length > 0) {
@@ -762,6 +799,7 @@ function renderPrintMaster() {
         `;
 
         tr.innerHTML = `
+            <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td style="font-weight:bold;">${code}</td>
             <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${name}">${name}</td>
             <td>${body}</td>

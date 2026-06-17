@@ -231,8 +231,17 @@ async function openOrderDetails(orderId) {
                 printFileCell = `<span class="badge badge-warning">未登録</span>`;
             }
             
+            const images = item.images || [];
+            let imgHtml = '';
+            if (images.length > 0) {
+                imgHtml = `<img src="${images[0]}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${images[0]}', '_blank')">`;
+            } else {
+                imgHtml = `<span style="color: var(--text-secondary); opacity: 0.4;">-</span>`;
+            }
+            
             tr.innerHTML = `
                 <td style="border: 1px solid #cbd5e1; text-align: center;">${index + 1}</td>
+                <td style="border: 1px solid #cbd5e1; text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td style="border: 1px solid #cbd5e1; font-weight:bold;">${item.product_code}</td>
                 <td style="border: 1px solid #cbd5e1; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
                 <td style="border: 1px solid #cbd5e1;">${item.body}</td>
