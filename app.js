@@ -1187,11 +1187,11 @@ function renderClientOrderDetailModal() {
         tr.style.borderBottom = '1px solid var(--border-color)';
         
         let sizeHtml = '';
-        const sizeLabels = ['S', 'M', 'L', 'XL', 'XXL'];
+        const sizeLabels = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
         item.qtys.forEach((qty, idx) => {
             if (qty > 0) {
-                const isBD = idx >= 5;
-                const label = sizeLabels[idx % 5] + (isBD ? '(BD)' : '(Std)');
+                const isBD = idx >= 6;
+                const label = sizeLabels[idx % 6] + (isBD ? '(BD)' : '(Std)');
                 sizeHtml += `<span style="display:inline-block; margin-right: 0.5rem; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight:bold; font-size:0.75rem; white-space:nowrap;">${label}: ${qty}枚</span>`;
             }
         });
