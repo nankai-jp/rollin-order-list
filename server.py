@@ -63,11 +63,13 @@ def init_db():
             body TEXT NOT NULL,
             design TEXT NOT NULL,
             wholesale_price REAL NOT NULL,
+            qty_xs_std INTEGER DEFAULT 0,
             qty_s_std INTEGER DEFAULT 0,
             qty_m_std INTEGER DEFAULT 0,
             qty_l_std INTEGER DEFAULT 0,
             qty_xl_std INTEGER DEFAULT 0,
             qty_xxl_std INTEGER DEFAULT 0,
+            qty_xs_bd INTEGER DEFAULT 0,
             qty_s_bd INTEGER DEFAULT 0,
             qty_m_bd INTEGER DEFAULT 0,
             qty_l_bd INTEGER DEFAULT 0,
@@ -95,11 +97,13 @@ def init_db():
             product_name TEXT NOT NULL,
             body TEXT NOT NULL,
             design TEXT NOT NULL,
+            qty_xs_std INTEGER DEFAULT 0,
             qty_s_std INTEGER DEFAULT 0,
             qty_m_std INTEGER DEFAULT 0,
             qty_l_std INTEGER DEFAULT 0,
             qty_xl_std INTEGER DEFAULT 0,
             qty_xxl_std INTEGER DEFAULT 0,
+            qty_xs_bd INTEGER DEFAULT 0,
             qty_s_bd INTEGER DEFAULT 0,
             qty_m_bd INTEGER DEFAULT 0,
             qty_l_bd INTEGER DEFAULT 0,
@@ -117,6 +121,22 @@ def init_db():
         except sqlite3.OperationalError:
             # Column already exists
             pass
+
+        # Ensure qty_xs_std and qty_xs_bd columns exist in order_items
+        for col in ["qty_xs_std", "qty_xs_bd"]:
+            try:
+                cursor.execute(f"ALTER TABLE order_items ADD COLUMN {col} INTEGER DEFAULT 0")
+                conn.commit()
+            except sqlite3.OperationalError:
+                pass
+                
+        # Ensure qty_xs_std and qty_xs_bd columns exist in maker_order_items
+        for col in ["qty_xs_std", "qty_xs_bd"]:
+            try:
+                cursor.execute(f"ALTER TABLE maker_order_items ADD COLUMN {col} INTEGER DEFAULT 0")
+                conn.commit()
+            except sqlite3.OperationalError:
+                pass
             
         conn.close()
         print("Database initialization successful.")
@@ -295,7 +315,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             row7 = rows[7] if len(rows) > 7 else [""] * len(row5)
             
             display_headers = []
-            for idx in range(19):
+            for idx in range(21):
                 h5 = row5[idx].strip() if idx < len(row5) else ""
                 h6 = row6[idx].strip() if idx < len(row6) else ""
                 h7 = row7[idx].strip() if idx < len(row7) else ""
@@ -304,9 +324,9 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     display_headers.append("ボディカラー")
                 elif idx == 5:
                     display_headers.append("デザイン")
-                elif idx >= 8 and idx <= 12:
+                elif idx >= 8 and idx <= 13:
                     display_headers.append(f"{h7}(Std)")
-                elif idx >= 13 and idx <= 17:
+                elif idx >= 14 and idx <= 19:
                     display_headers.append(f"{h7}(BD)")
                 else:
                     val = h5 if h5 else (h6 if h6 else h7)
@@ -365,7 +385,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 data_rows.append({
                     "original_index": i,
                     "is_editable": is_editable,
-                    "values": r[:19],  # フロントには19列分（0〜18）だけ送る
+                    "values": r[:21],  # フロントには21列分（0〜20）だけ送る
                     "images": images,
                     "print_files": print_files
                 })
@@ -453,8 +473,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
                 cursor.execute("""
                 SELECT product_code, product_name, body, design, wholesale_price,
-                       qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
-                       qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd,
+                       qty_xs_std, qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
+                       qty_xs_bd, qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd,
                        subtotal_amount
                 FROM order_items
                 WHERE order_id = ?
@@ -505,8 +525,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "body": body_val,
                         "design": design_val,
                         "wholesale_price": ir[4],
-                        "qtys": list(ir[5:15]),
-                        "subtotal_amount": ir[15],
+                        "qtys": list(ir[5:17]),
+                        "subtotal_amount": ir[17],
                         "images": images
                     })
                     
@@ -609,8 +629,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
                 cursor.execute("""
                 SELECT product_code, product_name, body, design, wholesale_price,
-                       qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
-                       qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd,
+                       qty_xs_std, qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
+                       qty_xs_bd, qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd,
                        subtotal_amount
                 FROM order_items
                 WHERE order_id = ?
@@ -783,8 +803,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
                 cursor.execute("""
                 SELECT product_code, product_name, body, body_color, design,
-                       qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
-                       qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
+                       qty_xs_std, qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
+                       qty_xs_bd, qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
                 FROM maker_order_items
                 WHERE maker_order_id = ?
                 """, (order_id,))
@@ -868,7 +888,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "body": body_val,
                         "body_color": body_color,
                         "design": design_val,
-                        "qtys": list(ir[5:15]),
+                        "qtys": list(ir[5:17]),
                         "print_files": print_files,
                         "images": images
                     })
@@ -1209,10 +1229,10 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     body = vals[4]
                     design = vals[5]
                     price = float(vals[7]) if vals[7] else 0.0
-                    subtotal = float(vals[18]) if vals[18] else 0.0
+                    subtotal = float(vals[20]) if vals[20] else 0.0
                     
                     qtys = []
-                    for idx in range(8, 18):
+                    for idx in range(8, 20):
                         qty = int(vals[idx]) if idx < len(vals) and vals[idx] else 0
                         qtys.append(qty)
                         total_qty += qty
@@ -1221,8 +1241,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     
                     db_items.append((
                         code, name, body, design, price,
-                        qtys[0], qtys[1], qtys[2], qtys[3], qtys[4],
-                        qtys[5], qtys[6], qtys[7], qtys[8], qtys[9],
+                        qtys[0], qtys[1], qtys[2], qtys[3], qtys[4], qtys[5],
+                        qtys[6], qtys[7], qtys[8], qtys[9], qtys[10], qtys[11],
                         subtotal
                     ))
                     
@@ -1239,10 +1259,10 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     cursor.execute("""
                     INSERT INTO order_items (
                         order_id, product_code, product_name, body, design, wholesale_price,
-                        qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
-                        qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd,
+                        qty_xs_std, qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
+                        qty_xs_bd, qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd,
                         subtotal_amount
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (order_id,) + db_item)
                     
                 conn.commit()
@@ -1317,15 +1337,15 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     body = item.get("body", "")
                     body_color = item.get("body_color", "")
                     design = item.get("design")
-                    qtys = item.get("qtys", [0]*10)
+                    qtys = item.get("qtys", [0]*12)
                     
                     item_qty = sum(qtys)
                     total_qty += item_qty
                     
                     db_items.append((
                         code, name, body, body_color, design,
-                        qtys[0], qtys[1], qtys[2], qtys[3], qtys[4],
-                        qtys[5], qtys[6], qtys[7], qtys[8], qtys[9]
+                        qtys[0], qtys[1], qtys[2], qtys[3], qtys[4], qtys[5],
+                        qtys[6], qtys[7], qtys[8], qtys[9], qtys[10], qtys[11]
                     ))
                 
                 # Insert Maker Order
@@ -1341,9 +1361,9 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     cursor.execute("""
                     INSERT INTO maker_order_items (
                         maker_order_id, product_code, product_name, body, body_color, design,
-                        qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
-                        qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        qty_xs_std, qty_s_std, qty_m_std, qty_l_std, qty_xl_std, qty_xxl_std,
+                        qty_xs_bd, qty_s_bd, qty_m_bd, qty_l_bd, qty_xl_bd, qty_xxl_bd
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (maker_order_id,) + db_item)
                     
                 conn.commit()

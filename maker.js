@@ -121,6 +121,8 @@ const elements = {
     detailTbody: document.getElementById('detail-tbody'),
     
     // 足元数量
+    footXSStd: document.getElementById('foot-xs-std'),
+    footXSBd: document.getElementById('foot-xs-bd'),
     footSStd: document.getElementById('foot-s-std'),
     footMStd: document.getElementById('foot-m-std'),
     footLStd: document.getElementById('foot-l-std'),
@@ -314,7 +316,7 @@ async function openOrderDetails(orderId) {
         elements.detailStatusBadge.className = `badge ${order.status === '納品完了' ? 'badge-success' : 'badge-warning'}`;
         
         elements.detailTbody.innerHTML = '';
-        const sizeTotals = Array(10).fill(0);
+        const sizeTotals = Array(12).fill(0);
         let totalCount = 0;
         
         items.forEach((item, index) => {
@@ -369,16 +371,18 @@ async function openOrderDetails(orderId) {
         });
         
         // フッター集計
-        elements.footSStd.innerHTML = `<strong>${sizeTotals[0] > 0 ? sizeTotals[0] : '-'}</strong>`;
-        elements.footMStd.innerHTML = `<strong>${sizeTotals[1] > 0 ? sizeTotals[1] : '-'}</strong>`;
-        elements.footLStd.innerHTML = `<strong>${sizeTotals[2] > 0 ? sizeTotals[2] : '-'}</strong>`;
-        elements.footXLStd.innerHTML = `<strong>${sizeTotals[3] > 0 ? sizeTotals[3] : '-'}</strong>`;
-        elements.footXXLStd.innerHTML = `<strong>${sizeTotals[4] > 0 ? sizeTotals[4] : '-'}</strong>`;
-        elements.footSBd.innerHTML = `<strong>${sizeTotals[5] > 0 ? sizeTotals[5] : '-'}</strong>`;
-        elements.footMBd.innerHTML = `<strong>${sizeTotals[6] > 0 ? sizeTotals[6] : '-'}</strong>`;
-        elements.footLBd.innerHTML = `<strong>${sizeTotals[7] > 0 ? sizeTotals[7] : '-'}</strong>`;
-        elements.footXLBd.innerHTML = `<strong>${sizeTotals[8] > 0 ? sizeTotals[8] : '-'}</strong>`;
-        elements.footXXLBd.innerHTML = `<strong>${sizeTotals[9] > 0 ? sizeTotals[9] : '-'}</strong>`;
+        elements.footXSStd.innerHTML = `<strong>${sizeTotals[0] > 0 ? sizeTotals[0] : '-'}</strong>`;
+        elements.footSStd.innerHTML = `<strong>${sizeTotals[1] > 0 ? sizeTotals[1] : '-'}</strong>`;
+        elements.footMStd.innerHTML = `<strong>${sizeTotals[2] > 0 ? sizeTotals[2] : '-'}</strong>`;
+        elements.footLStd.innerHTML = `<strong>${sizeTotals[3] > 0 ? sizeTotals[3] : '-'}</strong>`;
+        elements.footXLStd.innerHTML = `<strong>${sizeTotals[4] > 0 ? sizeTotals[4] : '-'}</strong>`;
+        elements.footXXLStd.innerHTML = `<strong>${sizeTotals[5] > 0 ? sizeTotals[5] : '-'}</strong>`;
+        elements.footXSBd.innerHTML = `<strong>${sizeTotals[6] > 0 ? sizeTotals[6] : '-'}</strong>`;
+        elements.footSBd.innerHTML = `<strong>${sizeTotals[7] > 0 ? sizeTotals[7] : '-'}</strong>`;
+        elements.footMBd.innerHTML = `<strong>${sizeTotals[8] > 0 ? sizeTotals[8] : '-'}</strong>`;
+        elements.footLBd.innerHTML = `<strong>${sizeTotals[9] > 0 ? sizeTotals[9] : '-'}</strong>`;
+        elements.footXLBd.innerHTML = `<strong>${sizeTotals[10] > 0 ? sizeTotals[10] : '-'}</strong>`;
+        elements.footXXLBd.innerHTML = `<strong>${sizeTotals[11] > 0 ? sizeTotals[11] : '-'}</strong>`;
         elements.footTotal.innerHTML = `<strong>${totalCount}</strong>`;
         
         elements.detailModal.classList.add('active');

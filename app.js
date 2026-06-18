@@ -88,9 +88,9 @@ const elements = {
 
 // サイズ列のインデックス範囲（6行目のヘッダー基準）
 const SIZE_START_IDX = 8;
-const SIZE_END_IDX = 17;
+const SIZE_END_IDX = 19;
 const WHOLESALE_PRICE_IDX = 7; // 卸価格
-const AMOUNT_TOTAL_IDX = 18;    // 金額計
+const AMOUNT_TOTAL_IDX = 20;    // 金額計
 
 // ==========================================================================
 // データのロードと初期化
@@ -196,7 +196,7 @@ function renderHeader() {
         // サイズ列は改行してコンパクトに表示
         if (idx >= SIZE_START_IDX && idx <= SIZE_END_IDX) {
             const sizeName = headerText.split('(')[0];
-            const suffix = idx < SIZE_START_IDX + 5 ? 'Std' : 'BD';
+            const suffix = idx < SIZE_START_IDX + 6 ? 'Std' : 'BD';
             th.innerHTML = `${sizeName}<br><span class="size-suffix">${suffix}</span>`;
         } else {
             th.textContent = headerText.replace('\n', ' ');

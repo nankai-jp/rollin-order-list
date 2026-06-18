@@ -181,6 +181,8 @@ const elements = {
     btnMakerUpdateStatus: document.getElementById('btn-maker-update-status'),
     btnMakerDeleteOrder: document.getElementById('btn-maker-delete-order'),
     makerDetailTbody: document.getElementById('maker-detail-tbody'),
+    makerFootXsStd: document.getElementById('maker-foot-xs-std'),
+    makerFootXsBd: document.getElementById('maker-foot-xs-bd'),
     makerFootSStd: document.getElementById('maker-foot-s-std'),
     makerFootMStd: document.getElementById('maker-foot-m-std'),
     makerFootLStd: document.getElementById('maker-foot-l-std'),
@@ -388,7 +390,7 @@ async function openOrderDetails(orderId) {
         elements.detailClientPhone.textContent = order.phone_number;
         
         elements.detailTbody.innerHTML = '';
-        const sizeTotals = Array(10).fill(0);
+        const sizeTotals = Array(12).fill(0);
         
         items.forEach((item, index) => {
             const tr = document.createElement('tr');
@@ -427,8 +429,8 @@ async function openOrderDetails(orderId) {
         });
         
         const sizeIds = [
-            'foot-s-std', 'foot-m-std', 'foot-l-std', 'foot-xl-std', 'foot-xxl-std',
-            'foot-s-bd', 'foot-m-bd', 'foot-l-bd', 'foot-xl-bd', 'foot-xxl-bd'
+            'foot-xs-std', 'foot-s-std', 'foot-m-std', 'foot-l-std', 'foot-xl-std', 'foot-xxl-std',
+            'foot-xs-bd', 'foot-s-bd', 'foot-m-bd', 'foot-l-bd', 'foot-xl-bd', 'foot-xxl-bd'
         ];
         sizeIds.forEach((id, idx) => {
             const el = document.getElementById(id);
@@ -578,7 +580,7 @@ async function openMakerOrderDetails(orderId) {
         elements.btnMakerDeleteOrder.onclick = () => deleteMakerOrder(order.id);
 
         elements.makerDetailTbody.innerHTML = '';
-        const totals = Array(10).fill(0);
+        const totals = Array(12).fill(0);
         let grandTotal = 0;
 
         items.forEach((item, index) => {
@@ -632,16 +634,18 @@ async function openMakerOrderDetails(orderId) {
         });
 
         // フッターバインド
-        elements.makerFootSStd.innerHTML = `<strong>${totals[0] > 0 ? totals[0] : '-'}</strong>`;
-        elements.makerFootMStd.innerHTML = `<strong>${totals[1] > 0 ? totals[1] : '-'}</strong>`;
-        elements.makerFootLStd.innerHTML = `<strong>${totals[2] > 0 ? totals[2] : '-'}</strong>`;
-        elements.makerFootXLStd.innerHTML = `<strong>${totals[3] > 0 ? totals[3] : '-'}</strong>`;
-        elements.makerFootXXLStd.innerHTML = `<strong>${totals[4] > 0 ? totals[4] : '-'}</strong>`;
-        elements.makerFootSBd.innerHTML = `<strong>${totals[5] > 0 ? totals[5] : '-'}</strong>`;
-        elements.makerFootMBd.innerHTML = `<strong>${totals[6] > 0 ? totals[6] : '-'}</strong>`;
-        elements.makerFootLBd.innerHTML = `<strong>${totals[7] > 0 ? totals[7] : '-'}</strong>`;
-        elements.makerFootXLBd.innerHTML = `<strong>${totals[8] > 0 ? totals[8] : '-'}</strong>`;
-        elements.makerFootXXLBd.innerHTML = `<strong>${totals[9] > 0 ? totals[9] : '-'}</strong>`;
+        elements.makerFootXsStd.innerHTML = `<strong>${totals[0] > 0 ? totals[0] : '-'}</strong>`;
+        elements.makerFootSStd.innerHTML = `<strong>${totals[1] > 0 ? totals[1] : '-'}</strong>`;
+        elements.makerFootMStd.innerHTML = `<strong>${totals[2] > 0 ? totals[2] : '-'}</strong>`;
+        elements.makerFootLStd.innerHTML = `<strong>${totals[3] > 0 ? totals[3] : '-'}</strong>`;
+        elements.makerFootXLStd.innerHTML = `<strong>${totals[4] > 0 ? totals[4] : '-'}</strong>`;
+        elements.makerFootXXLStd.innerHTML = `<strong>${totals[5] > 0 ? totals[5] : '-'}</strong>`;
+        elements.makerFootXsBd.innerHTML = `<strong>${totals[6] > 0 ? totals[6] : '-'}</strong>`;
+        elements.makerFootSBd.innerHTML = `<strong>${totals[7] > 0 ? totals[7] : '-'}</strong>`;
+        elements.makerFootMBd.innerHTML = `<strong>${totals[8] > 0 ? totals[8] : '-'}</strong>`;
+        elements.makerFootLBd.innerHTML = `<strong>${totals[9] > 0 ? totals[9] : '-'}</strong>`;
+        elements.makerFootXLBd.innerHTML = `<strong>${totals[10] > 0 ? totals[10] : '-'}</strong>`;
+        elements.makerFootXXLBd.innerHTML = `<strong>${totals[11] > 0 ? totals[11] : '-'}</strong>`;
         elements.makerFootTotal.innerHTML = `<strong>${grandTotal}</strong>`;
 
         elements.makerDetailModal.classList.add('active');
@@ -765,7 +769,7 @@ elements.btnMakerCreateAddRow.addEventListener('click', () => {
         body_color: body, // In CSV, body is the body color!
         body: "", // Clear body model so user can input it!
         design: design,
-        qtys: Array(10).fill(0),
+        qtys: Array(12).fill(0),
         images: prod.images || []
     });
 
