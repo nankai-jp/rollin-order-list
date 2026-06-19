@@ -16,7 +16,7 @@
 7,Polo,R3GOLF002,TURFERS GOLF  ,ブラック,1パターン,7800,4680,,,,,,,,,,,,,0,60
 8,Polo,R3GOLF003,CoffeeTime Polo ,ブラック,カラー,7800,4680,,,,,,,,,,,,,0,64
 9,Polo,R3GOLF003,CoffeeTime Polo ,ブラック,ソリッド,7800,4680,,,,,,,,,,,,,0,65
-10,Polo,R3GOLF003,CoffeeTime Polo ,ネイビー,1パターン,7800,4680,,,,,,,,,,,,,,
+10,Polo,R3GOLF003,CoffeeTime Polo ,ネイビー,1パターン,7800,4680,,,,,,,,,,,,,0,
 11,Polo,R3GOLF004,Last laugh ,ブラック,1パターン,7800,4680,,,,,,,,,,,,,0,66
 12,Polo,R3GOLF005,TURFERS “Golf with Groove” 　,ブラック,1パターン,7800,4680,,,,,,,,,,,,,0,69
 13,Polo,R3GOLF006,TURFERS GOLF CREW ,ネイビー,1パターン,7800,4680,,,,,,,,,,,,,0,54
@@ -80,5 +80,10 @@
 71,T-shirt,R3TOWNT024,DRIFT EASY  ,ホワイト,1パターン,6400,3520,,,,,,,,,,,,,0,9
 72,MockNeck,R3GOLF019,GOLF&GROOVE ,ブラック,1パターン,12800,7680,,,,,,,,,,,,,0,70
 73,MockNeck,R3GOLF020,Wave down. Club up ,ブラック,1パターン,12800,7680,,,,,,,,,,,,,0,67
+74,T-shirt,R3TOWNT026,WHAT'S UP TOMORROW,ホワイト,1パターン,5800,3190,,,,,,,,,,,,,,
+75,Polo,R3GOLF027,WHAT'S UP TOMORROW Polo,ホワイト,1パターン,7800,4680,,,,,,,,,,,,,0,
+76,Polo,R3GOLF026, PEANUT PATTER,ホワイト,1パターン,8400,5040,,,,,,,,,,,,,,
+77,Polo,R3GOLF026, PEANUT PATTER,グリーン,1パターン,8400,5040,,,,,,,,,,,,,,
+78,Polo,R3GOLF026, PEANUT PATTER,ターコイズブルー,1パターン,8400,5040,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,,合計金額,,,,0,
+,,,,,,,,,,,,,,,,合計金額,,,,,
