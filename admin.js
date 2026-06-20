@@ -407,7 +407,9 @@ async function openOrderDetails(orderId) {
             if (images.length > 0) {
                 imgHtml = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
                 images.forEach(imgUrl => {
-                    imgHtml += `<img src="${imgUrl}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">`;
+                    const safeUrl = imgUrl.replace(/'/g, "\\'");
+                    const safeAlt = (item.product_name || "").replace(/"/g, "&quot;");
+                    imgHtml += `<img src="${imgUrl}" alt="${safeAlt}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${safeUrl}', '_blank')">`;
                 });
                 imgHtml += `</div>`;
             } else {
@@ -612,7 +614,9 @@ async function openMakerOrderDetails(orderId) {
             if (images.length > 0) {
                 imgHtml = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
                 images.forEach(imgUrl => {
-                    imgHtml += `<img src="${imgUrl}" alt="${item.product_name}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">`;
+                    const safeUrl = imgUrl.replace(/'/g, "\\'");
+                    const safeAlt = (item.product_name || "").replace(/"/g, "&quot;");
+                    imgHtml += `<img src="${imgUrl}" alt="${safeAlt}" class="col-thumb-img" style="width: 35px; height: 35px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="window.open('${safeUrl}', '_blank')">`;
                 });
                 imgHtml += `</div>`;
             } else {
@@ -1000,7 +1004,9 @@ function renderPrintMaster() {
         if (images.length > 0) {
             imgHtml = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
             images.forEach(imgUrl => {
-                imgHtml += `<img src="${imgUrl}" alt="${name}" class="col-thumb-img" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" onclick="window.open('${imgUrl}', '_blank')">`;
+                const safeUrl = imgUrl.replace(/'/g, "\\'");
+                const safeAlt = (name || "").replace(/"/g, "&quot;");
+                imgHtml += `<img src="${imgUrl}" alt="${safeAlt}" class="col-thumb-img" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer;" onclick="window.open('${safeUrl}', '_blank')">`;
             });
             imgHtml += `</div>`;
         } else {
