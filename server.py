@@ -1576,33 +1576,37 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
             try:
                 prefix = f"{product_code}_"
-                target_parent = None
-                if os.path.exists(BASE_FOLDER_NAME):
-                    for item in os.listdir(BASE_FOLDER_NAME):
-                        if item.startswith(prefix) and os.path.isdir(os.path.join(BASE_FOLDER_NAME, item)):
+                
+                # 永続ディスクとローカルリポジトリの両方から削除を行う
+                for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
+                    if not os.path.exists(base_dir):
+                        continue
+                        
+                    target_parent = None
+                    for item in os.listdir(base_dir):
+                        if item.startswith(prefix) and os.path.isdir(os.path.join(base_dir, item)):
                             target_parent = item
                             break
                             
-                if not target_parent:
-                    self.send_json({"error": "Product folder not found"}, 404)
-                    return
+                    if not target_parent:
+                        continue
+                        
+                    cleaned_b = clean_folder_name(body)
+                    cleaned_d = clean_folder_name(design)
+                    subfolder_name = f"{cleaned_b}_{cleaned_d}"
+                    print_folder = os.path.join(base_dir, target_parent, subfolder_name, "print")
                     
-                cleaned_b = clean_folder_name(body)
-                cleaned_d = clean_folder_name(design)
-                subfolder_name = f"{cleaned_b}_{cleaned_d}"
-                print_folder = os.path.join(BASE_FOLDER_NAME, target_parent, subfolder_name, "print")
-                
-                if os.path.exists(print_folder) and os.path.isdir(print_folder):
-                    if filename:
-                        file_path = os.path.join(print_folder, filename)
-                        if os.path.exists(file_path) and os.path.isfile(file_path):
-                            os.remove(file_path)
-                    else:
-                        for item in os.listdir(print_folder):
-                            item_path = os.path.join(print_folder, item)
-                            if os.path.isfile(item_path):
-                                os.remove(item_path)
-                            
+                    if os.path.exists(print_folder) and os.path.isdir(print_folder):
+                        if filename:
+                            file_path = os.path.join(print_folder, filename)
+                            if os.path.exists(file_path) and os.path.isfile(file_path):
+                                os.remove(file_path)
+                        else:
+                            for item in os.listdir(print_folder):
+                                item_path = os.path.join(print_folder, item)
+                                if os.path.isfile(item_path):
+                                    os.remove(item_path)
+                                    
                 self.send_json({"status": "success"})
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
