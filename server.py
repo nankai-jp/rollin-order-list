@@ -646,8 +646,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "body": ir[2],
                         "design": ir[3],
                         "wholesale_price": ir[4],
-                        "qtys": list(ir[5:15]),
-                        "subtotal_amount": ir[15]
+                        "qtys": list(ir[5:17]),
+                        "subtotal_amount": ir[17]
                     })
                     
                 self.send_json({
