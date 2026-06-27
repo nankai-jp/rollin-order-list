@@ -117,7 +117,8 @@ const elements = {
     detailOrderNumber: document.getElementById('detail-order-number'),
     detailOrderDate: document.getElementById('detail-order-date'),
     detailSourceNumber: document.getElementById('detail-source-number'),
-    detailStatusBadge: document.getElementById('detail-status-badge'),
+    detailStatusSelect: document.getElementById('detail-status-select'),
+    btnUpdateStatus: document.getElementById('btn-update-status'),
     detailTbody: document.getElementById('detail-tbody'),
     
     // 足元数量
@@ -261,7 +262,8 @@ function renderOrders() {
             `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
         
         let badgeClass = 'badge-warning';
-        if (order.status === '納品完了') badgeClass = 'badge-success';
+        if (order.status === '受取済' || order.status === '納品完了') badgeClass = 'badge-success';
+        else if (order.status === '製作済' || order.status === '製作中') badgeClass = 'badge-info';
 
         // プリントデータ HTML
         let printHtml = '';
@@ -294,6 +296,9 @@ function renderOrders() {
     });
 }
 
+// ステータス更新のために現在開いている発注IDを保持する変数
+let currentOrderIdForStatusUpdate = null;
+
 // 詳細モーダルを開く
 async function openOrderDetails(orderId) {
     try {
@@ -304,6 +309,7 @@ async function openOrderDetails(orderId) {
         
         const data = await response.json();
         const { order, items } = data;
+        currentOrderIdForStatusUpdate = order.id;
         
         elements.detailOrderNumber.textContent = order.maker_order_number;
         const dateObj = new Date(order.created_at);
@@ -311,9 +317,15 @@ async function openOrderDetails(orderId) {
             `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${String(dateObj.getDate()).padStart(2, '0')}`;
         elements.detailSourceNumber.textContent = order.source_order_number || "なし（社内直接発注）";
         
-        // ステータスバッジ
-        elements.detailStatusBadge.textContent = order.status;
-        elements.detailStatusBadge.className = `badge ${order.status === '納品完了' ? 'badge-success' : 'badge-warning'}`;
+        // ステータス選択・変更の制御
+        elements.detailStatusSelect.value = order.status;
+        if (order.status === '受取済' || order.status === '納品完了') {
+            elements.detailStatusSelect.disabled = true;
+            elements.btnUpdateStatus.disabled = true;
+        } else {
+            elements.detailStatusSelect.disabled = false;
+            elements.btnUpdateStatus.disabled = false;
+        }
         
         elements.detailTbody.innerHTML = '';
         const sizeTotals = Array(12).fill(0);
@@ -395,6 +407,31 @@ async function openOrderDetails(orderId) {
     }
 }
 
+// 製作業者によるステータスの更新
+async function updateMakerOrderStatus(orderId) {
+    const status = elements.detailStatusSelect.value;
+    try {
+        const response = await fetch('/api/maker/orders/update-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: makerState.token,
+                id: orderId,
+                status: status
+            })
+        });
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "ステータスの更新に失敗しました。");
+        }
+        showToast("ステータスを更新しました。");
+        loadOrders();
+        closeDetailModal();
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
 // モーダルを閉じる
 function closeDetailModal() {
     elements.detailModal.classList.remove('active');
@@ -414,6 +451,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     elements.closeDetailModalBtn.addEventListener('click', closeDetailModal);
     elements.closeDetailModalBtnLower.addEventListener('click', closeDetailModal);
+    
+    elements.btnUpdateStatus.addEventListener('click', () => {
+        if (currentOrderIdForStatusUpdate) {
+            updateMakerOrderStatus(currentOrderIdForStatusUpdate);
+        }
+    });
     
     // 印刷処理 (別タブ起動でメイン画面のクローズを防止)
     const printBtn = document.getElementById('maker-detail-print-btn');

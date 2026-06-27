@@ -1408,6 +1408,48 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": str(e)}, 500)
             return
 
+        elif path == '/api/maker/orders/update-status':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                order_id = req_data.get("id")
+                status = req_data.get("status")
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            MAKER_PASSWORD = "rollin-maker"
+            if token != MAKER_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            if status not in ["発注済", "製作済"]:
+                self.send_json({"error": "製作業者はこのステータスに変更できません。"}, 400)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                
+                # Check current status
+                cursor.execute("SELECT status FROM maker_orders WHERE id = ?", (order_id,))
+                current_status_row = cursor.fetchone()
+                if current_status_row and current_status_row[0] == "受取済":
+                    conn.close()
+                    self.send_json({"error": "受取済の発注データは変更できません。"}, 400)
+                    return
+                    
+                cursor.execute("UPDATE maker_orders SET status = ? WHERE id = ?", (status, order_id))
+                conn.commit()
+                conn.close()
+                self.send_json({"status": "success"})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
         elif path == '/api/admin/orders/delete':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)

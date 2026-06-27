@@ -1514,6 +1514,11 @@ body {
     color: #d97706;
     border: 1px solid #f59e0b;
 }
+.badge-info {
+    background-color: rgba(14, 165, 233, 0.1);
+    color: #0284c7;
+    border: 1px solid #0ea5e9;
+}
 
 /* Maker login container */
 .maker-login-container {

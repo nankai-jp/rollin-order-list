@@ -252,10 +252,15 @@
                     </div>
                 </div>
 
-                <!-- ステータス表示 (印刷時は非表示) -->
+                <!-- ステータス表示・変更 (印刷時は非表示) -->
                 <div style="margin-bottom: 1.5rem; background-color: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 0.5rem;" class="hide-on-print">
-                    <span style="font-weight: 600; font-size: 0.9rem;">現在の進行状況:</span>
-                    <span id="detail-status-badge" class="badge badge-warning">発注済</span>
+                    <span style="font-weight: 600; font-size: 0.9rem;">進行ステータス:</span>
+                    <select id="detail-status-select" class="form-group select" style="padding: 0.35rem 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-main); font-size: 0.88rem; cursor: pointer;">
+                        <option value="発注済">発注済</option>
+                        <option value="製作済">製作済</option>
+                        <option value="受取済" disabled>受取済（社内確認用）</option>
+                    </select>
+                    <button class="btn btn-secondary" id="btn-update-status" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">変更保存</button>
                 </div>
 
                 <div class="table-responsive">

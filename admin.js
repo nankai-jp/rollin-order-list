@@ -539,7 +539,8 @@ function renderMakerHistory(orders) {
             `${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
 
         let statusClass = 'badge-warning';
-        if (order.status === '納品完了') statusClass = 'badge-success';
+        if (order.status === '受取済' || order.status === '納品完了') statusClass = 'badge-success';
+        else if (order.status === '製作済' || order.status === '製作中') statusClass = 'badge-info';
 
         tr.innerHTML = `
             <td>${formattedDate}</td>
