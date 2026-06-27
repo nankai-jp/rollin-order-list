@@ -374,7 +374,7 @@ async function openOrderDetails(orderId) {
                 <td style="border: 1px solid #cbd5e1; text-align: center;">${index + 1}</td>
                 <td style="border: 1px solid #cbd5e1; text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td style="border: 1px solid #cbd5e1; font-weight:bold;" title="${item.product_code}">${item.product_code}</td>
-                <td style="border: 1px solid #cbd5e1; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
+                <td style="border: 1px solid #cbd5e1; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
                 <td style="border: 1px solid #cbd5e1;" title="${item.body_color || ''}">${item.body_color || ''}</td>
                 <td style="border: 1px solid #cbd5e1;" title="${item.body || ''}">${item.body || ''}</td>
                 <td style="border: 1px solid #cbd5e1;" title="${item.design}">${item.design}</td>
