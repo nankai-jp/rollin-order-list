@@ -2,6 +2,7 @@
 let adminState = {
     token: localStorage.getItem("admin_password") || "",
     orders: [],
+    makerOrders: [],
     currentOrder: null
 };
 
@@ -153,6 +154,7 @@ const elements = {
     // 製作業者発注タブ
     btnNewMakerOrder: document.getElementById('btn-new-maker-order'),
     makerRefreshBtn: document.getElementById('maker-refresh-btn'),
+    makerStatusFilter: document.getElementById('maker-status-filter'),
     makerHistoryTbody: document.getElementById('maker-history-tbody'),
 
     // プリントデータ管理タブ
@@ -512,27 +514,39 @@ async function loadMakerHistory() {
             throw new Error("外注発注履歴の取得に失敗しました。");
         }
         const data = await response.json();
-        renderMakerHistory(data.orders);
+        adminState.makerOrders = data.orders;
+        renderMakerHistory();
     } catch (error) {
         console.error("loadMakerHistory error:", error);
         showToast(error.message, "error");
     }
 }
 
-function renderMakerHistory(orders) {
+function renderMakerHistory() {
+    const orders = adminState.makerOrders || [];
+    const filterStatus = elements.makerStatusFilter.value;
+    
     elements.makerHistoryTbody.innerHTML = '';
-    if (orders.length === 0) {
+    
+    const filteredOrders = orders.filter(order => {
+        if (filterStatus === 'すべて') return true;
+        if (filterStatus === '受取済') return order.status === '受取済' || order.status === '納品完了';
+        if (filterStatus === '製作済') return order.status === '製作済' || order.status === '製作中';
+        return order.status === filterStatus;
+    });
+
+    if (filteredOrders.length === 0) {
         elements.makerHistoryTbody.innerHTML = `
             <tr>
                 <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                    登録されている製作業者向け発注はありません。
+                    該当する製作業者向け発注はありません。
                 </td>
             </tr>
         `;
         return;
     }
 
-    orders.forEach(order => {
+    filteredOrders.forEach(order => {
         const tr = document.createElement('tr');
         const dateObj = new Date(order.created_at);
         const formattedDate = isNaN(dateObj.getTime()) ? order.created_at : 
@@ -1171,6 +1185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.logoutBtn.addEventListener('click', handleLogout);
     elements.refreshBtn.addEventListener('click', loadHistory);
     elements.makerRefreshBtn.addEventListener('click', loadMakerHistory);
+    elements.makerStatusFilter.addEventListener('change', () => renderMakerHistory());
     
     // モーダルを閉じるボタンたち
     elements.closeDetailModalBtn.addEventListener('click', closeDetailModal);

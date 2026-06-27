@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>【管理画面】ROLLIN THREEご注文履歴</title>
-    <link rel="stylesheet" href="style.css?v=20260627_3">
+    <link rel="stylesheet" href="style.css?v=20260627_5">
     <!-- Google Fonts Outfit & Noto Sans JP -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -317,7 +317,13 @@
                 <div style="font-size: 0.95rem; color: var(--text-secondary);">
                     製作業者（外注先）への発注履歴および進行状況の管理が行えます。
                 </div>
-                <div style="display: flex; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <select id="maker-status-filter" class="form-group select" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-main); font-size: 0.9rem; cursor: pointer; height: 38px; margin-bottom: 0;">
+                        <option value="すべて">🔍 すべてのステータス</option>
+                        <option value="発注済">発注済</option>
+                        <option value="製作済">製作済</option>
+                        <option value="受取済">受取済</option>
+                    </select>
                     <button class="btn btn-primary" id="btn-new-maker-order" style="background-color: #4f46e5;">＋ 新規発注入力</button>
                     <button class="btn btn-secondary" id="maker-refresh-btn">🔄 履歴を更新</button>
                 </div>
@@ -620,6 +626,6 @@
         <span class="toast-message" id="toast-message"></span>
     </div>
 
-    <script src="admin.js?v=20260627_3"></script>
+    <script src="admin.js?v=20260627_5"></script>
 </body>
 </html>

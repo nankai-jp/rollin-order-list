@@ -108,6 +108,7 @@ const elements = {
     loginBtn: document.getElementById('login-btn'),
     logoutBtn: document.getElementById('logout-btn'),
     refreshBtn: document.getElementById('refresh-btn'),
+    makerStatusFilter: document.getElementById('maker-status-filter'),
     historyTbody: document.getElementById('history-tbody'),
     
     // 詳細モーダル
@@ -243,18 +244,28 @@ async function loadOrders() {
 function renderOrders() {
     elements.historyTbody.innerHTML = '';
     
-    if (makerState.orders.length === 0) {
+    const orders = makerState.orders || [];
+    const filterStatus = elements.makerStatusFilter.value;
+    
+    const filteredOrders = orders.filter(order => {
+        if (filterStatus === 'すべて') return true;
+        if (filterStatus === '受取済') return order.status === '受取済' || order.status === '納品完了';
+        if (filterStatus === '製作済') return order.status === '製作済' || order.status === '製作中';
+        return order.status === filterStatus;
+    });
+
+    if (filteredOrders.length === 0) {
         elements.historyTbody.innerHTML = `
             <tr>
                 <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                    ご発注依頼データはありません。
+                    該当する発注依頼はありません。
                 </td>
             </tr>
         `;
         return;
     }
     
-    makerState.orders.forEach(order => {
+    filteredOrders.forEach(order => {
         const tr = document.createElement('tr');
         
         const dateObj = new Date(order.created_at);
@@ -448,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     elements.logoutBtn.addEventListener('click', handleLogout);
     elements.refreshBtn.addEventListener('click', loadOrders);
+    elements.makerStatusFilter.addEventListener('change', renderOrders);
     
     elements.closeDetailModalBtn.addEventListener('click', closeDetailModal);
     elements.closeDetailModalBtnLower.addEventListener('click', closeDetailModal);
