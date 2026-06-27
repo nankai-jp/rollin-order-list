@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>【製作業者専用】ROLLIN THREE 発注確認ポータル</title>
-    <link rel="stylesheet" href="style.css?v=20260627_3">
+    <link rel="stylesheet" href="style.css?v=20260627_4">
     <!-- Google Fonts Outfit & Noto Sans JP -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,6 +80,22 @@
         .col-thumb-img:hover {
             transform: scale(1.08);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* 注文詳細テーブルのスタイル上書き（全体テーブルのstickyレイアウトを無効化） */
+        .modal-content .order-table,
+        .detail-modal-content .order-table {
+            table-layout: auto !important;
+        }
+        .modal-content .order-table th, 
+        .modal-content .order-table td,
+        .detail-modal-content .order-table th, 
+        .detail-modal-content .order-table td {
+            position: static !important;
+            width: auto !important;
+            max-width: none !important;
+            white-space: normal !important;
+            border: 1px solid #cbd5e1 !important;
         }
         
         @media print {
@@ -326,6 +342,6 @@
         <span class="toast-message" id="toast-message"></span>
     </div>
 
-    <script src="maker.js?v=20260627_3"></script>
+    <script src="maker.js?v=20260627_4"></script>
 </body>
 </html>
