@@ -420,7 +420,7 @@ async function openOrderDetails(orderId) {
                 <td style="border: 1px solid #000; padding: 6px 4px; text-align: center;">${index + 1}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px; text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px;">${item.product_code}</td>
-                <td style="border: 1px solid #000; padding: 6px 4px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.product_name}</td>
+                <td style="border: 1px solid #000; padding: 6px 4px; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.product_name}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px;">${item.body}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px;">${item.design}</td>
                 <td style="border: 1px solid #000; padding: 6px 4px; text-align: right;">¥ ${item.wholesale_price.toLocaleString()}</td>
@@ -628,7 +628,7 @@ async function openMakerOrderDetails(orderId) {
                 <td style="text-align: center;">${index + 1}</td>
                 <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
                 <td title="${item.product_code}">${item.product_code}</td>
-                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
+                <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
                 <td title="${item.body_color || ''}">${item.body_color || ''}</td>
                 <td title="${item.body || ''}">${item.body || ''}</td>
                 <td title="${item.design}">${item.design}</td>
@@ -824,7 +824,7 @@ function renderMakerCreateList() {
             <td style="text-align: center;">${index + 1}</td>
             <td style="text-align: center; vertical-align: middle;">${imgHtml}</td>
             <td style="font-weight:bold;">${item.product_code}</td>
-            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
+            <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.product_name}">${item.product_name}</td>
             <td>${item.body_color || ''}</td>
             <td style="padding: 4px;">
                 <input type="text" class="body-input-field" list="maker-bodies-list" value="${item.body}" data-index="${index}" 
