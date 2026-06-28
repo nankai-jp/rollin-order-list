@@ -695,18 +695,29 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     
                     for ir in item_rows:
                         product_code = ir[0]
+                        product_name = ir[1]
                         body_val = ir[2]
                         body_color = ir[3]
                         design_val = ir[4]
                         
                         prefix = f"{product_code}_"
                         target_parent = None
+                        cleaned_product_name = clean_folder_name(product_name)
+                        expected_folder_name = f"{product_code}_{cleaned_product_name}"
+                        
                         for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
                             if os.path.exists(base_dir):
+                                # Try exact match first
                                 for item in os.listdir(base_dir):
-                                    if item.startswith(prefix) and os.path.isdir(os.path.join(base_dir, item)):
+                                    if item == expected_folder_name and os.path.isdir(os.path.join(base_dir, item)):
                                         target_parent = item
                                         break
+                                # Fallback to prefix match
+                                if not target_parent:
+                                    for item in os.listdir(base_dir):
+                                        if item.startswith(prefix) and os.path.isdir(os.path.join(base_dir, item)):
+                                            target_parent = item
+                                            break
                                 if target_parent:
                                     break
                                     
