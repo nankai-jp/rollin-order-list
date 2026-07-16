@@ -138,6 +138,41 @@ def init_db():
             except sqlite3.OperationalError:
                 pass
             
+        # Create makers table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS makers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            maker_code TEXT UNIQUE NOT NULL,
+            maker_name TEXT NOT NULL,
+            password TEXT UNIQUE NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        conn.commit()
+
+        # Add maker_id to maker_orders
+        try:
+            cursor.execute("ALTER TABLE maker_orders ADD COLUMN maker_id INTEGER REFERENCES makers(id)")
+            conn.commit()
+        except sqlite3.OperationalError:
+            # Column already exists
+            pass
+
+        # Seed default maker if empty
+        cursor.execute("SELECT count(*) FROM makers")
+        if cursor.fetchone()[0] == 0:
+            cursor.execute("""
+            INSERT INTO makers (maker_code, maker_name, password)
+            VALUES ('DEFAULT', 'デフォルト業者', 'rollin-maker')
+            """)
+            conn.commit()
+
+        # Update maker_orders with NULL maker_id to point to the default maker
+        cursor.execute("SELECT id FROM makers WHERE maker_code = 'DEFAULT'")
+        default_maker_id = cursor.fetchone()[0]
+        cursor.execute("UPDATE maker_orders SET maker_id = ? WHERE maker_id IS NULL", (default_maker_id,))
+        conn.commit()
+            
         conn.close()
         print("Database initialization successful.")
     except Exception as e:
@@ -662,19 +697,24 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             query_params = urllib.parse.parse_qs(parsed_url.query)
             token = query_params.get("token", [""])[0].strip()
             
-            MAKER_PASSWORD = "rollin-maker"
-            if token != MAKER_PASSWORD:
-                self.send_json({"error": "Unauthorized"}, 401)
-                return
-                
             try:
                 conn = sqlite3.connect(DATABASE_FILE)
                 cursor = conn.cursor()
+                cursor.execute("SELECT id, maker_name FROM makers WHERE password = ?", (token,))
+                maker_row = cursor.fetchone()
+                if not maker_row:
+                    conn.close()
+                    self.send_json({"error": "Unauthorized"}, 401)
+                    return
+                maker_id = maker_row[0]
+                maker_name = maker_row[1]
+                
                 cursor.execute("""
                 SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at
                 FROM maker_orders
+                WHERE maker_id = ?
                 ORDER BY created_at DESC
-                """)
+                """, (maker_id,))
                 rows = cursor.fetchall()
                 
                 orders = []
@@ -769,7 +809,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "print_files": print_files
                     })
                 conn.close()
-                self.send_json({"orders": orders})
+                self.send_json({"orders": orders, "maker_name": maker_name})
             except Exception as e:
                 self.send_json({"error": str(e)}, 500)
             return
@@ -780,11 +820,24 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             order_id = query_params.get("id", [""])[0]
             
             ADMIN_PASSWORD = "rollin-admin"
-            MAKER_PASSWORD = "rollin-maker"
-            if token != ADMIN_PASSWORD and token != MAKER_PASSWORD:
-                self.send_json({"error": "Unauthorized"}, 401)
-                return
-                
+            is_admin = (token == ADMIN_PASSWORD)
+            maker_id = None
+            
+            if not is_admin:
+                try:
+                    conn = sqlite3.connect(DATABASE_FILE)
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT id FROM makers WHERE password = ?", (token,))
+                    row = cursor.fetchone()
+                    if row:
+                        maker_id = row[0]
+                    conn.close()
+                except Exception:
+                    pass
+                if maker_id is None:
+                    self.send_json({"error": "Unauthorized"}, 401)
+                    return
+                    
             if not order_id:
                 self.send_json({"error": "Missing order ID"}, 400)
                 return
@@ -792,10 +845,19 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             try:
                 conn = sqlite3.connect(DATABASE_FILE)
                 cursor = conn.cursor()
-                cursor.execute("""
-                SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at
-                FROM maker_orders WHERE id = ?
-                """, (order_id,))
+                
+                # Fetch order details
+                if is_admin:
+                    cursor.execute("""
+                    SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at, maker_id
+                    FROM maker_orders WHERE id = ?
+                    """, (order_id,))
+                else:
+                    cursor.execute("""
+                    SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at, maker_id
+                    FROM maker_orders WHERE id = ? AND maker_id = ?
+                    """, (order_id, maker_id))
+                    
                 order_row = cursor.fetchone()
                 if not order_row:
                     conn.close()
@@ -803,13 +865,21 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     return
                     
                 created_at_iso = order_row[5].replace(" ", "T") + "Z" if order_row[5] else ""
+                
+                # Let's get maker_name for details
+                cursor.execute("SELECT maker_name FROM makers WHERE id = ?", (order_row[6],))
+                assigned_maker_row = cursor.fetchone()
+                assigned_maker_name = assigned_maker_row[0] if assigned_maker_row else "未設定"
+                
                 order_summary = {
                     "id": order_row[0],
                     "maker_order_number": order_row[1],
                     "source_order_number": order_row[2] or "",
                     "total_quantity": order_row[3],
                     "status": order_row[4],
-                    "created_at": created_at_iso
+                    "created_at": created_at_iso,
+                    "maker_id": order_row[6],
+                    "maker_name": assigned_maker_name
                 }
                 
                 cursor.execute("""
@@ -935,9 +1005,10 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 conn = sqlite3.connect(DATABASE_FILE)
                 cursor = conn.cursor()
                 cursor.execute("""
-                SELECT id, maker_order_number, source_order_number, total_quantity, status, created_at
-                FROM maker_orders
-                ORDER BY created_at DESC
+                SELECT mo.id, mo.maker_order_number, mo.source_order_number, mo.total_quantity, mo.status, mo.created_at, mo.maker_id, m.maker_name
+                FROM maker_orders mo
+                LEFT JOIN makers m ON mo.maker_id = m.id
+                ORDER BY mo.created_at DESC
                 """)
                 rows = cursor.fetchall()
                 
@@ -1030,7 +1101,9 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         "status": r[4],
                         "created_at": created_at_iso,
                         "thumbnail_url": thumbnail_url,
-                        "print_files": print_files
+                        "print_files": print_files,
+                        "maker_id": r[6],
+                        "maker_name": r[7] or "未設定"
                     })
                 conn.close()
                 self.send_json({"orders": orders})
@@ -1083,6 +1156,36 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             })
             return
 
+        elif path == '/api/admin/makers':
+            query_params = urllib.parse.parse_qs(parsed_url.query)
+            token = query_params.get("token", [""])[0].strip()
+            
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("SELECT id, maker_code, maker_name, password, created_at FROM makers ORDER BY created_at DESC")
+                rows = cursor.fetchall()
+                conn.close()
+                
+                makers = []
+                for r in rows:
+                    makers.append({
+                        "id": r[0],
+                        "maker_code": r[1],
+                        "maker_name": r[2],
+                        "password": r[3],
+                        "created_at": r[4]
+                    })
+                self.send_json({"makers": makers})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
         elif path == '/api/download-print':
             query_params = urllib.parse.parse_qs(parsed_url.query)
             product_code = query_params.get("product_code", [""])[0].strip()
@@ -1092,8 +1195,20 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             token = query_params.get("token", [""])[0].strip()
             
             ADMIN_PASSWORD = "rollin-admin"
-            MAKER_PASSWORD = "rollin-maker"
-            if token != ADMIN_PASSWORD and token != MAKER_PASSWORD:
+            is_valid_token = (token == ADMIN_PASSWORD)
+            
+            if not is_valid_token:
+                try:
+                    conn = sqlite3.connect(DATABASE_FILE)
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT id FROM makers WHERE password = ?", (token,))
+                    if cursor.fetchone():
+                        is_valid_token = True
+                    conn.close()
+                except Exception:
+                    pass
+                    
+            if not is_valid_token:
                 self.send_json({"error": "Unauthorized"}, 401)
                 return
                 
@@ -1347,11 +1462,20 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
                 return
                 
-            MAKER_PASSWORD = "rollin-maker"
-            if password == MAKER_PASSWORD:
-                self.send_json({"status": "success", "token": MAKER_PASSWORD})
-            else:
-                self.send_json({"error": "パスワードが正しくありません。"}, 401)
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                cursor.execute("SELECT id, maker_name FROM makers WHERE password = ?", (password,))
+                row = cursor.fetchone()
+                conn.close()
+                
+                if row:
+                    self.send_json({"status": "success", "token": password, "maker_name": row[1]})
+                else:
+                    self.send_json({"error": "パスワードが正しくありません。"}, 401)
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
 
         elif path == '/api/admin/maker-orders/create':
             content_length = int(self.headers['Content-Length'])
@@ -1360,6 +1484,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             try:
                 req_data = json.loads(post_data.decode('utf-8'))
                 token = req_data.get("token", "")
+                maker_id = req_data.get("maker_id")
                 source_order_number = req_data.get("source_order_number", None)
                 items = req_data.get("items", [])
             except Exception as e:
@@ -1409,9 +1534,9 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 
                 # Insert Maker Order
                 cursor.execute("""
-                INSERT INTO maker_orders (maker_order_number, source_order_number, total_quantity, status)
-                VALUES (?, ?, ?, '発注済')
-                """, (maker_order_number, source_order_number, total_qty))
+                INSERT INTO maker_orders (maker_order_number, source_order_number, total_quantity, status, maker_id)
+                VALUES (?, ?, ?, '発注済', ?)
+                """, (maker_order_number, source_order_number, total_qty, maker_id))
                 
                 maker_order_id = cursor.lastrowid
                 
@@ -1480,25 +1605,38 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
                 return
                 
-            MAKER_PASSWORD = "rollin-maker"
-            if token != MAKER_PASSWORD:
-                self.send_json({"error": "Unauthorized"}, 401)
-                return
-                
-            if status not in ["発注済", "製作済"]:
-                self.send_json({"error": "製作業者はこのステータスに変更できません。"}, 400)
-                return
-                
             try:
                 conn = sqlite3.connect(DATABASE_FILE)
                 cursor = conn.cursor()
                 
-                # Check current status
-                cursor.execute("SELECT status FROM maker_orders WHERE id = ?", (order_id,))
+                # Identify maker by password token
+                cursor.execute("SELECT id FROM makers WHERE password = ?", (token,))
+                maker_row = cursor.fetchone()
+                if not maker_row:
+                    conn.close()
+                    self.send_json({"error": "Unauthorized"}, 401)
+                    return
+                maker_id = maker_row[0]
+                
+                # Check status and maker ownership
+                cursor.execute("SELECT status, maker_id FROM maker_orders WHERE id = ?", (order_id,))
                 current_status_row = cursor.fetchone()
-                if current_status_row and current_status_row[0] == "受取済":
+                if not current_status_row:
+                    conn.close()
+                    self.send_json({"error": "発注データが見つかりません。"}, 404)
+                    return
+                if current_status_row[1] != maker_id:
+                    conn.close()
+                    self.send_json({"error": "Unauthorized"}, 401)
+                    return
+                if current_status_row[0] == "受取済" or current_status_row[0] == "納品完了":
                     conn.close()
                     self.send_json({"error": "受取済の発注データは変更できません。"}, 400)
+                    return
+                    
+                if status not in ["発注済", "製作済"]:
+                    conn.close()
+                    self.send_json({"error": "製作業者はこのステータスに変更できません。"}, 400)
                     return
                     
                 cursor.execute("UPDATE maker_orders SET status = ? WHERE id = ?", (status, order_id))
@@ -1560,6 +1698,102 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 cursor = conn.cursor()
                 cursor.execute("DELETE FROM maker_order_items WHERE maker_order_id = ?", (order_id,))
                 cursor.execute("DELETE FROM maker_orders WHERE id = ?", (order_id,))
+                conn.commit()
+                conn.close()
+                self.send_json({"status": "success"})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/admin/makers/create':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                maker_code = req_data.get("maker_code", "").strip()
+                maker_name = req_data.get("maker_name", "").strip()
+                password = req_data.get("password", "").strip()
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            if not maker_code or not maker_name or not password:
+                self.send_json({"error": "メーカー名、メーカーコード、パスワードをすべて入力してください。"}, 400)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                
+                # Check password uniqueness across admin and makers
+                if password == ADMIN_PASSWORD:
+                    conn.close()
+                    self.send_json({"error": "このパスワードは管理者と重複するため使用できません。"}, 400)
+                    return
+                    
+                # Check unique code or password
+                cursor.execute("SELECT count(*) FROM makers WHERE maker_code = ? OR password = ?", (maker_code, password))
+                if cursor.fetchone()[0] > 0:
+                    conn.close()
+                    self.send_json({"error": "メーカーコードまたはパスワードが既に使われています。別の値を入力してください。"}, 400)
+                    return
+                    
+                cursor.execute("""
+                INSERT INTO makers (maker_code, maker_name, password)
+                VALUES (?, ?, ?)
+                """, (maker_code, maker_name, password))
+                conn.commit()
+                conn.close()
+                self.send_json({"status": "success"})
+            except Exception as e:
+                self.send_json({"error": str(e)}, 500)
+            return
+
+        elif path == '/api/admin/makers/delete':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                req_data = json.loads(post_data.decode('utf-8'))
+                token = req_data.get("token", "")
+                maker_id = req_data.get("id")
+            except Exception as e:
+                self.send_json({"error": f"Invalid JSON payload: {str(e)}"}, 400)
+                return
+                
+            ADMIN_PASSWORD = "rollin-admin"
+            if token != ADMIN_PASSWORD:
+                self.send_json({"error": "Unauthorized"}, 401)
+                return
+                
+            try:
+                conn = sqlite3.connect(DATABASE_FILE)
+                cursor = conn.cursor()
+                
+                # Find default maker
+                cursor.execute("SELECT id FROM makers WHERE maker_code = 'DEFAULT'")
+                default_maker_id_row = cursor.fetchone()
+                default_maker_id = default_maker_id_row[0] if default_maker_id_row else None
+                
+                if int(maker_id) == default_maker_id:
+                    conn.close()
+                    self.send_json({"error": "デフォルトの製作業者は削除できません。"}, 400)
+                    return
+                    
+                # Delete maker
+                cursor.execute("DELETE FROM makers WHERE id = ?", (maker_id,))
+                
+                # Re-assign deleted maker's orders to default maker
+                if default_maker_id is not None:
+                    cursor.execute("UPDATE maker_orders SET maker_id = ? WHERE maker_id = ?", (default_maker_id, maker_id))
+                    
                 conn.commit()
                 conn.close()
                 self.send_json({"status": "success"})

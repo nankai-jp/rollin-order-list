@@ -140,7 +140,10 @@ const elements = {
     // トースト
     toast: document.getElementById('toast'),
     toastIcon: document.getElementById('toast-icon'),
-    toastMessage: document.getElementById('toast-message')
+    toastMessage: document.getElementById('toast-message'),
+    
+    // ポータルヘッダー挨拶
+    makerPortalGreeting: document.getElementById('maker-portal-greeting')
 };
 
 // トースト通知を表示
@@ -232,6 +235,9 @@ async function loadOrders() {
         const data = await response.json();
         makerState.orders = data.orders;
         renderOrders();
+        if (data.maker_name && elements.makerPortalGreeting) {
+            elements.makerPortalGreeting.innerHTML = `ログイン中: <strong>${data.maker_name} 様</strong>`;
+        }
         return true;
     } catch (error) {
         console.error("loadOrders error:", error);

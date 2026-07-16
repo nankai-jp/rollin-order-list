@@ -277,6 +277,7 @@
             <button class="tab-btn active" data-tab="tab-customer-orders">👥 お客様からの注文履歴</button>
             <button class="tab-btn" data-tab="tab-maker-orders">🏭 製作業者への発注管理</button>
             <button class="tab-btn" data-tab="tab-print-management">🎨 プリントデータ管理</button>
+            <button class="tab-btn" data-tab="tab-maker-master">🏢 製作業者マスタ</button>
         </div>
 
         <!-- タブ1: お客様からの注文履歴 -->
@@ -336,6 +337,7 @@
                             <th>発注日時</th>
                             <th>発注番号</th>
                             <th>元顧客発注番号</th>
+                            <th>発注先</th>
                             <th style="text-align: right;">総数量</th>
                             <th>ステータス</th>
                             <th style="text-align: center;">操作</th>
@@ -382,6 +384,58 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- タブ4: 製作業者マスタ -->
+        <div id="tab-maker-master" class="tab-content">
+            <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        複数の製作業者（製作会社）のアカウントを管理できます。各業者は、設定された固有のパスワードでログインし、自社向けの発注書をダウンロード・進行管理できます。
+                    </div>
+                    <div class="table-responsive">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>メーカー名</th>
+                                    <th>メーカーコード</th>
+                                    <th>ログインパスワード</th>
+                                    <th style="text-align: center;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maker-master-tbody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                        データを読み込んでいます...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 新規メーカー登録フォーム -->
+                <div style="width: 320px; background-color: #f8fafc; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-sm);">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.35rem;">🏢 製作業者の追加</h3>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-primary);">メーカー名</label>
+                        <input type="text" id="new-maker-name" placeholder="例: ROLLIN製作所" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-main);">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-primary);">メーカーコード</label>
+                        <input type="text" id="new-maker-code" placeholder="例: MK001" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-main);">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-primary);">ログインパスワード</label>
+                        <input type="text" id="new-maker-password" placeholder="例: rollin-maker-a" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-main);">
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-create-maker" style="width: 100%; background-color: #10b981; border-color: #10b981;">登録する</button>
+                </div>
             </div>
         </div>
     </div>
@@ -480,6 +534,13 @@
             
             <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem;">
                 <span id="maker-create-source-info">新規手動発注</span>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background-color: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                <label style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">発注先（製作業者）選択 <span style="color:var(--danger); font-size:0.8rem;">*必須</span> :</label>
+                <select id="maker-create-select" class="form-group select" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: var(--font-main); font-size: 0.9rem; min-width: 250px; margin-bottom: 0;">
+                    <!-- 動的に製作業者リストが挿入されます -->
+                </select>
             </div>
 
             <!-- 手動選択用のセクション（手動発注時のみ表示） -->

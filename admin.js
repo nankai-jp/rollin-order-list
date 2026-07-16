@@ -3,7 +3,8 @@ let adminState = {
     token: localStorage.getItem("admin_password") || "",
     orders: [],
     makerOrders: [],
-    currentOrder: null
+    currentOrder: null,
+    makers: []
 };
 
 // 製作業者発注作成の状態
@@ -200,7 +201,15 @@ const elements = {
     systemStatusContainer: document.getElementById('system-status-container'),
     systemStatusBadge: document.getElementById('system-status-badge'),
     systemStatusDot: document.getElementById('system-status-dot'),
-    systemStatusText: document.getElementById('system-status-text')
+    systemStatusText: document.getElementById('system-status-text'),
+    
+    // 製作業者マスタ
+    makerMasterTbody: document.getElementById('maker-master-tbody'),
+    newMakerName: document.getElementById('new-maker-name'),
+    newMakerCode: document.getElementById('new-maker-code'),
+    newMakerPassword: document.getElementById('new-maker-password'),
+    btnCreateMaker: document.getElementById('btn-create-maker'),
+    makerCreateSelect: document.getElementById('maker-create-select')
 };
 
 // トースト通知を表示
@@ -228,6 +237,7 @@ async function initAuth() {
             // 初期タブデータのロード
             loadMakerHistory();
             loadPrintMaster();
+            loadMakers();
             updateSystemStatus(); // システム接続情報の更新
         } else {
             localStorage.removeItem("admin_password");
@@ -257,6 +267,7 @@ async function handleLogin() {
         elements.adminDashboard.style.display = 'block';
         loadMakerHistory();
         loadPrintMaster();
+        loadMakers();
         updateSystemStatus(); // システム接続情報の更新
         showToast("ログインに成功しました。");
     } else {
@@ -499,6 +510,8 @@ elements.tabButtons.forEach(btn => {
             loadPrintMaster();
         } else if (targetTab === 'tab-customer-orders') {
             loadHistory();
+        } else if (targetTab === 'tab-maker-master') {
+            loadMakers();
         }
     });
 });
@@ -560,6 +573,7 @@ function renderMakerHistory() {
             <td>${formattedDate}</td>
             <td style="font-weight: bold; color: var(--primary);">${order.maker_order_number}</td>
             <td>${order.source_order_number ? order.source_order_number : '<span style="color:var(--text-secondary)">手動直接発注</span>'}</td>
+            <td>${order.maker_name || 'デフォルト'}</td>
             <td style="text-align: right; font-weight: bold;">${order.total_quantity}</td>
             <td><span class="badge ${statusClass}">${order.status}</span></td>
             <td style="text-align: center; vertical-align: middle;">
@@ -894,12 +908,19 @@ elements.btnMakerCreateSubmit.addEventListener('click', async () => {
         return;
     }
 
+    const makerId = parseInt(elements.makerCreateSelect.value);
+    if (!makerId) {
+        showToast("発注先の製作業者を選択してください。", "error");
+        return;
+    }
+
     try {
         const response = await fetch('/api/admin/maker-orders/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 token: adminState.token,
+                maker_id: makerId,
                 source_order_number: makerCreateState.sourceOrderNumber,
                 items: makerCreateState.items
             })
@@ -1173,6 +1194,141 @@ async function deletePrintFile(code, body, design, filename = "") {
 }
 
 
+// ==========================================================================
+// 【新規】製作業者（メーカー）一覧の取得・管理 (Tab 4)
+// ==========================================================================
+async function loadMakers() {
+    try {
+        const response = await fetch(`/api/admin/makers?token=${encodeURIComponent(adminState.token)}`);
+        if (!response.ok) {
+            throw new Error("製作業者情報の取得に失敗しました。");
+        }
+        const data = await response.json();
+        adminState.makers = data.makers || [];
+        renderMakers();
+        updateMakerSelectDropdown();
+    } catch (error) {
+        console.error("loadMakers error:", error);
+        showToast(error.message, "error");
+    }
+}
+
+function renderMakers() {
+    elements.makerMasterTbody.innerHTML = '';
+    
+    if (adminState.makers.length === 0) {
+        elements.makerMasterTbody.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    登録されている製作業者はいません。
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    adminState.makers.forEach(maker => {
+        const tr = document.createElement('tr');
+        const isDefault = maker.maker_code === 'DEFAULT';
+        
+        tr.innerHTML = `
+            <td style="font-weight: bold;">${maker.maker_name}</td>
+            <td style="font-family: monospace;">${maker.maker_code}</td>
+            <td style="font-family: monospace;">${maker.password}</td>
+            <td style="text-align: center;">
+                ${isDefault ? '<span style="color:var(--text-secondary); font-size:0.85rem;">システム保護</span>' : `<button class="btn btn-secondary btn-delete-maker" data-id="${maker.id}" style="background-color:rgba(239, 68, 68, 0.1); border-color:rgba(239, 68, 68, 0.2); color:var(--danger); padding:0.3rem 0.6rem; font-size:0.8rem;">🗑️ 削除</button>`}
+            </td>
+        `;
+        
+        if (!isDefault) {
+            tr.querySelector('.btn-delete-maker').addEventListener('click', () => deleteMaker(maker.id));
+        }
+        elements.makerMasterTbody.appendChild(tr);
+    });
+}
+
+function updateMakerSelectDropdown() {
+    elements.makerCreateSelect.innerHTML = '';
+    
+    if (adminState.makers.length === 0) {
+        const option = document.createElement('option');
+        option.value = "";
+        option.textContent = "製作業者が登録されていません";
+        elements.makerCreateSelect.appendChild(option);
+        return;
+    }
+    
+    adminState.makers.forEach(maker => {
+        const option = document.createElement('option');
+        option.value = maker.id;
+        option.textContent = `${maker.maker_name} (${maker.maker_code})`;
+        elements.makerCreateSelect.appendChild(option);
+    });
+}
+
+async function createMaker() {
+    const makerName = elements.newMakerName.value.trim();
+    const makerCode = elements.newMakerCode.value.trim();
+    const password = elements.newMakerPassword.value.trim();
+    
+    if (!makerName || !makerCode || !password) {
+        showToast("メーカー名、メーカーコード、パスワードをすべて入力してください。", "error");
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/makers/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: adminState.token,
+                maker_name: makerName,
+                maker_code: makerCode,
+                password: password
+            })
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "製作業者の登録に失敗しました。");
+        }
+        
+        showToast("製作業者を登録しました。");
+        elements.newMakerName.value = '';
+        elements.newMakerCode.value = '';
+        elements.newMakerPassword.value = '';
+        loadMakers();
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
+async function deleteMaker(makerId) {
+    if (!confirm("本当にこの製作業者を削除しますか？\n削除された業者の発注データは「デフォルト業者」へ自動的に再割り当てされます。")) return;
+    
+    try {
+        const response = await fetch('/api/admin/makers/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: adminState.token,
+                id: makerId
+            })
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "製作業者の削除に失敗しました。");
+        }
+        
+        showToast("製作業者を削除しました。");
+        loadMakers();
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
+
 // 起動とイベント紐付け
 document.addEventListener('DOMContentLoaded', () => {
     initAuth();
@@ -1186,6 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.refreshBtn.addEventListener('click', loadHistory);
     elements.makerRefreshBtn.addEventListener('click', loadMakerHistory);
     elements.makerStatusFilter.addEventListener('change', () => renderMakerHistory());
+    elements.btnCreateMaker.addEventListener('click', createMaker);
     
     // モーダルを閉じるボタンたち
     elements.closeDetailModalBtn.addEventListener('click', closeDetailModal);
