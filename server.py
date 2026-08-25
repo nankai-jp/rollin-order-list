@@ -198,11 +198,20 @@ def clean_folder_name(name):
         name = name.replace(char, replacement)
     return name.strip().strip('.')
 
-def find_product_folder(base_dir, product_code):
+def find_product_folder(base_dir, product_code, product_name=None):
     if not base_dir or not product_code or not os.path.exists(base_dir):
         return None
     product_code_clean = product_code.strip().replace(" ", "").lower()
     prefix = product_code_clean + "_"
+    
+    if product_name:
+        product_name_clean = product_name.strip().replace(" ", "").replace("\u3000", "").lower()
+        for item in os.listdir(base_dir):
+            if os.path.isdir(os.path.join(base_dir, item)):
+                item_clean = item.replace(" ", "").replace("\u3000", "").lower()
+                if item_clean.startswith(prefix) and (product_name_clean in item_clean or item_clean.endswith(product_name_clean)):
+                    return item
+
     for item in os.listdir(base_dir):
         if os.path.isdir(os.path.join(base_dir, item)):
             item_clean = item.replace(" ", "").lower()
@@ -410,8 +419,8 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     cleaned_d = clean_folder_name(d_val)
                     subfolder_name = f"{cleaned_b}_{cleaned_d}"
                     
-                    folder_persistent = find_product_folder(BASE_FOLDER_NAME, p_val)
-                    folder_local = find_product_folder("注文リスト管理", p_val)
+                    folder_persistent = find_product_folder(BASE_FOLDER_NAME, p_val, n_val)
+                    folder_local = find_product_folder("注文リスト管理", p_val, n_val)
                     
                     path_persistent = os.path.join(BASE_FOLDER_NAME, folder_persistent, subfolder_name) if folder_persistent else None
                     path_local = os.path.join("注文リスト管理", folder_local, subfolder_name) if folder_local else None
@@ -553,7 +562,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     scanned_images = set()
                     valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
                     for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
-                        target_parent = find_product_folder(base_dir, product_code)
+                        target_parent = find_product_folder(base_dir, product_code, product_name)
                         if target_parent:
                             cleaned_b = clean_folder_name(body_val)
                             cleaned_d = clean_folder_name(design_val)
@@ -761,7 +770,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         scanned_prints = set()
                         
                         for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
-                            target_parent = find_product_folder(base_dir, product_code)
+                            target_parent = find_product_folder(base_dir, product_code, product_name)
                             if target_parent:
                                 folder_path = os.path.join(base_dir, target_parent, subfolder_name)
                                 
@@ -926,7 +935,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                     valid_exts = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
                     
                     for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
-                        target_parent = find_product_folder(base_dir, product_code)
+                        target_parent = find_product_folder(base_dir, product_code, product_name)
                         if target_parent:
                             folder_path = os.path.join(base_dir, target_parent, subfolder_name)
                             if os.path.exists(folder_path) and os.path.isdir(folder_path):
@@ -1015,7 +1024,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                         scanned_prints = set()
                         
                         for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
-                            target_parent = find_product_folder(base_dir, product_code)
+                            target_parent = find_product_folder(base_dir, product_code, product_name)
                             if target_parent:
                                 folder_path = os.path.join(base_dir, target_parent, subfolder_name)
                                 if not thumbnail_url and os.path.exists(folder_path) and os.path.isdir(folder_path):
@@ -1136,6 +1145,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
         elif path == '/api/download-print':
             query_params = urllib.parse.parse_qs(parsed_url.query)
             product_code = query_params.get("product_code", [""])[0].strip()
+            product_name_param = query_params.get("product_name", [""])[0].strip()
             body = query_params.get("body", [""])[0].strip()
             design = query_params.get("design", [""])[0].strip()
             filename_param = query_params.get("filename", [""])[0].strip()
@@ -1164,27 +1174,28 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 return
                 
             # Retrieve product_name from database for exact folder matching
-            product_name = ""
-            try:
-                conn = sqlite3.connect(DATABASE_FILE)
-                cursor = conn.cursor()
-                cursor.execute("SELECT product_name FROM maker_order_items WHERE product_code = ? LIMIT 1", (product_code,))
-                row = cursor.fetchone()
-                if row:
-                    product_name = row[0]
-                else:
-                    cursor.execute("SELECT product_name FROM order_items WHERE product_code = ? LIMIT 1", (product_code,))
+            product_name = product_name_param
+            if not product_name:
+                try:
+                    conn = sqlite3.connect(DATABASE_FILE)
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT product_name FROM maker_order_items WHERE product_code = ? LIMIT 1", (product_code,))
                     row = cursor.fetchone()
                     if row:
                         product_name = row[0]
-                conn.close()
-            except Exception:
-                pass
+                    else:
+                        cursor.execute("SELECT product_name FROM order_items WHERE product_code = ? LIMIT 1", (product_code,))
+                        row = cursor.fetchone()
+                        if row:
+                            product_name = row[0]
+                    conn.close()
+                except Exception:
+                    pass
 
             target_parent = None
             used_base_dir = None
             for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
-                target_parent = find_product_folder(base_dir, product_code)
+                target_parent = find_product_folder(base_dir, product_code, product_name)
                 if target_parent:
                     used_base_dir = base_dir
                     break
@@ -1797,9 +1808,9 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 return
                 
             try:
-                existing_folder = find_product_folder(BASE_FOLDER_NAME, product_code)
+                existing_folder = find_product_folder(BASE_FOLDER_NAME, product_code, product_name)
                 if not existing_folder:
-                    existing_folder = find_product_folder("注文リスト管理", product_code)
+                    existing_folder = find_product_folder("注文リスト管理", product_code, product_name)
                     
                 cleaned_n = clean_folder_name(product_name)
                 cleaned_b = clean_folder_name(body)
@@ -1832,6 +1843,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
                 req_data = json.loads(post_data.decode('utf-8'))
                 token = req_data.get("token", "")
                 product_code = req_data.get("product_code", "").strip()
+                product_name = req_data.get("product_name", "").strip()
                 body = req_data.get("body", "").strip()
                 design = req_data.get("design", "").strip()
                 filename = req_data.get("filename", "").strip()
@@ -1847,7 +1859,7 @@ class OrderManagerHandler(BaseHTTPRequestHandler):
             try:
                 # 永続ディスクとローカルリポジトリの両方から削除を行う
                 for base_dir in [BASE_FOLDER_NAME, "注文リスト管理"]:
-                    target_parent = find_product_folder(base_dir, product_code)
+                    target_parent = find_product_folder(base_dir, product_code, product_name)
                     if not target_parent:
                         continue
                         

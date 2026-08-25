@@ -627,7 +627,7 @@ async function openMakerOrderDetails(orderId) {
             let printFileCell = '';
             if (item.print_files && item.print_files.length > 0) {
                 item.print_files.forEach(file => {
-                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body_color || item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
+                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&product_name=${encodeURIComponent(item.product_name)}&body=${encodeURIComponent(item.body_color || item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
                     printFileCell += `
                         <a href="javascript:void(0)" onclick="downloadPrintFile('${downloadUrl.replace(/'/g, "\\'")}', '${file.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd;" title="${file}">
                             📥 ${file}
@@ -1052,7 +1052,7 @@ function renderPrintMaster() {
         let statusBadgeHtml = '';
         if (printFiles.length > 0) {
             printFiles.forEach(file => {
-                const downloadUrl = `/api/download-print?product_code=${code}&body=${encodeURIComponent(body)}&design=${encodeURIComponent(design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
+                const downloadUrl = `/api/download-print?product_code=${code}&product_name=${encodeURIComponent(name)}&body=${encodeURIComponent(body)}&design=${encodeURIComponent(design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(adminState.token)}`;
                 statusBadgeHtml += `
                     <div style="margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background-color: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);">
                         <span class="badge badge-success" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${file}">${file}</span>
@@ -1089,7 +1089,7 @@ function renderPrintMaster() {
                 const fileBody = target.getAttribute('data-body');
                 const fileDesign = target.getAttribute('data-design');
                 const fileName = target.getAttribute('data-file');
-                deletePrintFile(fileCode, fileBody, fileDesign, fileName);
+                deletePrintFile(fileCode, name, fileBody, fileDesign, fileName);
             });
         });
 
@@ -1167,7 +1167,7 @@ hiddenFileInput.addEventListener('change', async (e) => {
     currentUploadMetadata = null;
 });
 
-async function deletePrintFile(code, body, design, filename = "") {
+async function deletePrintFile(code, name, body, design, filename = "") {
     const confirmMsg = filename 
         ? `この商品（品番: ${code}）のファイル「${filename}」を削除しますか？`
         : `この商品（品番: ${code}）のすべてのイラストレータデータを削除しますか？`;
@@ -1179,6 +1179,7 @@ async function deletePrintFile(code, body, design, filename = "") {
             body: JSON.stringify({
                 token: adminState.token,
                 product_code: code,
+                product_name: name,
                 body: body,
                 design: design,
                 filename: filename

@@ -362,7 +362,7 @@ async function openOrderDetails(orderId) {
             let printFileCell = '';
             if (item.print_files && item.print_files.length > 0) {
                 item.print_files.forEach(file => {
-                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&body=${encodeURIComponent(item.body_color || item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(makerState.token)}`;
+                    const downloadUrl = `/api/download-print?product_code=${item.product_code}&product_name=${encodeURIComponent(item.product_name)}&body=${encodeURIComponent(item.body_color || item.body)}&design=${encodeURIComponent(item.design)}&filename=${encodeURIComponent(file)}&token=${encodeURIComponent(makerState.token)}`;
                     printFileCell += `
                         <a href="javascript:void(0)" onclick="downloadPrintFile('${downloadUrl.replace(/'/g, "\\'")}', '${file.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.25rem; margin-bottom:4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; background-color: #e0f2fe; color: #0369a1; border-color: #bae6fd; text-decoration: none;" title="${file}">
                             📥 ${file}
